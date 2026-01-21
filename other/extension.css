@@ -1,0 +1,174 @@
+/* 弹窗外轮廓 */
+.hyyz-tip {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+/* 弹窗内轮廓 */
+.hyyz-tip2 {
+    width: 20%;
+    min-height: 5%;
+    left: 50%;
+    top: 50%;
+    font-size: 18px;
+    color: #f7a907;
+    font-family: 'xingkai';
+    background: linear-gradient(to right, #1b19cc, #00ff7ead);
+    box-shadow: 0 0 10px #00236bfa;
+    border: #8315d4 3px solid;
+    border-radius: 10px;
+    position: absolute;
+    display: block;
+    padding: 8px;
+    transform: translate(-50%, -50%);
+    transition: none;
+}
+
+
+/* 冻结效果 */
+.player .hyyzBuff-dongjie {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /*默认不显示*/
+    opacity: 0;
+    background-image: url("image/hyyzBuff-dongjie.png");
+    background-size: cover;
+    pointer-events: none;
+    z-index: 62;
+}
+
+/* 用hyyzBuff_dongjie控制hyyzBuff-dongjie的透明度，显示一下 */
+.player.hyyzBuff_dongjie>.hyyzBuff-dongjie {
+    opacity: 1;
+}
+
+
+/* 骊歌粉色变色动画 */
+.hyyz-animation {
+    animation: hyyz 0.5s infinite ease-in-out;
+}
+
+@keyframes hyyz {
+    0% {
+        color: #ffc1ea;
+    }
+
+    50% {
+        color: #f40cf0;
+    }
+
+    100% {
+        color: #ffc1ea;
+    }
+}
+
+/* 粉丝蓝色变色动画 */
+.meng-animation {
+    animation: meng 0.5s infinite ease-in-out;
+}
+
+@keyframes meng {
+    0% {
+        color: #07a6f0;
+    }
+
+    50% {
+        color: #008cff;
+    }
+
+    100% {
+        color: #07a6f0;
+    }
+}
+
+/* 尾巴酱青色变色动画 */
+.JLP-animation {
+    animation: JLP 0.5s infinite ease-in-out;
+}
+
+@keyframes JLP {
+    0% {
+        color: #00ffff;
+    }
+
+    50% {
+        color: #05c42f;
+    }
+
+    100% {
+        color: #00ffff;
+    }
+}
+
+
+/* 军争通用势力 */
+.hyyzGroup {
+    text-shadow: 1px 1px 2px #ea059e, 0 0 8px #c20081;
+    color: white;
+}
+
+
+/* 毁灭 */
+.hyyz_huimie {
+    text-shadow: 1px 1px 2px #ff0000, 0 0 8px #b10000;
+    color: white;
+}
+
+/* 巡猎 */
+.hyyz_xunlie {
+    text-shadow: 1px 1px 2px #09ff00, 0 0 8px #006407;
+    color: white;
+}
+
+/* 智识 */
+.hyyz_zhishi {
+    text-shadow: 1px 1px 2px #00ffb3, 0 0 8px #00667f;
+    color: white;
+}
+
+/* 同谐 */
+.hyyz_tongxie {
+    text-shadow: 1px 1px 2px #c000fa, 0 0 8px #78079b;
+    color: white;
+}
+
+/* 虚无 */
+.hyyz_xvwu {
+    text-shadow: 1px 1px 2px #5ca2df, 0 0 8px #038490;
+    color: white;
+}
+
+/* 存护 */
+.hyyz_cunhu {
+    text-shadow: 1px 1px 2px #0c89d6, 0 0 8px #2600ff;
+    color: white;
+}
+
+
+/* 丰饶 */
+.hyyz_fengrao {
+    text-shadow: 1px 1px 2px #fff266, 0 0 8px #c4ba00;
+    color: white;
+}
+
+/* 记忆 */
+.hyyz_jiyi {
+    text-shadow: 1px 1px 2px #cc8316, 0 0 8px #8a3e00;
+    color: white;
+}
+
+/* 欢愉 */
+.hyyz_huanyv {
+    text-shadow: 1px 1px 2px #c000fa, 0 0 8px #78079b;
+    color: white;
+}
+
+/* 繁育 */
+.hyyz_fanyv {
+    text-shadow: 1px 1px 2px #ea059e, 0 0 8px #c20081;
+    color: white;
+}
