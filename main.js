@@ -13,9 +13,9 @@ async function PRECONTENT() {
 	//——————————————忽悠宇宙特有存储空间——————————————//
 	lib.hyyz ??= {}
 	Object.assign(lib.hyyz, {
-		meng: {}, ym: {},
+		ym: {}, prefix: {},
 		//所有武将
-		character: {},
+		characters: {},
 		//注释
 		get introduce() {
 			const introduce = {
@@ -65,177 +65,206 @@ async function PRECONTENT() {
 
 	//——————————————导入CSS文件——————————————//
 	lib.init.css(`${lib.assetURL}extension/忽悠宇宙/other`, `extension`);
+	if ('势力与新属性') {
+		//——————————————势力添加——————————————//
+		game.addGroup('hyyz_ys', '<span class="hyyzGroup">原</span>', '原神', {
+			color: 'water',
+			image: 'ext:忽悠宇宙/other/qhly/hyyz_ys.png'
+		});
+		game.addGroup('hyyz_xt', `<span class="hyyzGroup">铁</span>`, '星铁', {
+			color: 'white',
+			image: 'ext:忽悠宇宙/other/qhly/hyyz_xt.png'
+		});
+		game.addGroup('hyyz_b3', '<span class="hyyzGroup">崩</span>', '崩三', {
+			color: 'thunder',
+			image: 'ext:忽悠宇宙/other/qhly/hyyz_b3.png'
+		});
+		game.addGroup('hyyz_zzz', '<span class="hyyzGroup">绝</span>', '绝区零', {
+			color: 'black',
+			image: 'ext:忽悠宇宙/other/qhly/hyyz_zzz.png'
+		});
+		game.addGroup('hyyz_other', '<span class="hyyzGroup">梦</span>', '圆梦', {
+			color: '#ee9ac7',
+			image: 'ext:忽悠宇宙/other/qhly/hyyz_other.png'
+		});
 
 
-	//——————————————新属性——————————————//
-	game.addNature('hyyz_water', '水熵', {
-		audio: undefined,
-		linked: true,
-		order: 10,
-		background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_water.png',
-		lineColor: [0, 100, 200],
-		color: [0, 100, 200],
-	});
-	game.addNature('fire', '火焰', {
-		audio: undefined,
-		linked: true,
-		order: 20,
-		background: 'extension/忽悠宇宙/asset/hyyzCard/image/fire.png',
-		lineColor: [255, 0, 0],
-		color: [255, 0, 0],
-	});
-	game.addNature('thunder', '雷电', {
-		audio: undefined,
-		linked: true,
-		order: 30,
-		background: 'extension/忽悠宇宙/asset/hyyzCard/image/thunder.png',
-		lineColor: [180, 0, 180],
-		color: [180, 0, 180],
-	});
-	game.addNature('ice', '冰冻', {
-		audio: undefined,
-		linked: true,
-		order: 40,
-		background: 'extension/忽悠宇宙/asset/hyyzCard/image/ice.png',
-		lineColor: [70, 170, 170],
-		color: [70, 170, 170],
-	});
-	game.addNature('hyyz_wind', '风蚀', {
-		audio: undefined,
-		linked: true,
-		order: 70,
-		background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_wind.png',
-		lineColor: [80, 220, 220],
-		color: [80, 220, 220],
-	});
-	lib.skill._hyyz_wind = {
-		trigger: {
-			player: "damageBegin4"
-		},
-		forced: true,
-		priority: -Infinity,
-		popup: false,
-		filter: function (event, player) {
-			return player.countCards('he') > 0 && event.hasNature('hyyz_wind');
-		},
-		async content(event, trigger, player) {
-			const cards = await player
-				.chooseToDiscard(`风蚀`, `弃置至少一张牌；每多弃置两张，防止1点伤害`, 'he', [1, trigger.num * 2 + 1], true)
-				.set('ai', function (card) {
-					const trigger = _status.event.getTrigger(), player = _status.event.player;
-					if (
-						player.countCards('he') - 3 >= trigger.num * 2 + 1 ||
-						player.countCards('he') >= trigger.num * 2 + 1 && trigger.num > player.hp
-					) {
-						return true;//致命，牌多
-					};
-					let cards = player.getCards('he').sort((a, b) => get.value(a) - get.value(b));
-					let discards = [cards.shift()];
-					while (discards.reduce((a, b) => a + get.value(b), 0) / discards.length <= 8 && cards.length >= 2) {
-						//game.log(discards, '的平均收益：', discards.reduce((a, b) => a + get.value(b), 0) / discards.length, '<li>其他牌为', cards)
-						discards.add(cards.shift());
-						discards.add(cards.shift());
-					};
-					return discards.includes(card);
-				})
-				.forResultCards();
-			if (cards) {
-				var count = Math.floor((cards.length - 1) / 2);
-				if (count > 0) {
-					game.log('#g「风蚀」', player, '减少了', count, '点风蚀伤害');
-					if (trigger.num > 0) trigger.num -= count;
+		//——————————————新属性——————————————//
+		game.addNature('hyyz_water', '水熵', {
+			audio: undefined,
+			linked: true,
+			order: 10,
+			background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_water.png',
+			lineColor: [0, 100, 200],
+			color: [0, 100, 200],
+		});
+		game.addNature('fire', '火焰', {
+			audio: undefined,
+			linked: true,
+			order: 20,
+			background: 'extension/忽悠宇宙/asset/hyyzCard/image/fire.png',
+			lineColor: [255, 0, 0],
+			color: [255, 0, 0],
+		});
+		game.addNature('thunder', '雷电', {
+			audio: undefined,
+			linked: true,
+			order: 30,
+			background: 'extension/忽悠宇宙/asset/hyyzCard/image/thunder.png',
+			lineColor: [180, 0, 180],
+			color: [180, 0, 180],
+		});
+		game.addNature('ice', '冰冻', {
+			audio: undefined,
+			linked: true,
+			order: 40,
+			background: 'extension/忽悠宇宙/asset/hyyzCard/image/ice.png',
+			lineColor: [70, 170, 170],
+			color: [70, 170, 170],
+		});
+		game.addNature('hyyz_wind', '风蚀', {
+			audio: undefined,
+			linked: true,
+			order: 70,
+			background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_wind.png',
+			lineColor: [80, 220, 220],
+			color: [80, 220, 220],
+		});
+		lib.skill._hyyz_wind = {
+			trigger: {
+				player: "damageBegin4"
+			},
+			forced: true,
+			priority: -Infinity,
+			popup: false,
+			filter: function (event, player) {
+				return player.countCards('he') > 0 && event.hasNature('hyyz_wind');
+			},
+			async content(event, trigger, player) {
+				const cards = await player
+					.chooseToDiscard(`风蚀`, `弃置至少一张牌；每多弃置两张，防止1点伤害`, 'he', [1, trigger.num * 2 + 1], true)
+					.set('ai', function (card) {
+						const trigger = _status.event.getTrigger(), player = _status.event.player;
+						if (
+							player.countCards('he') - 3 >= trigger.num * 2 + 1 ||
+							player.countCards('he') >= trigger.num * 2 + 1 && trigger.num > player.hp
+						) {
+							return true;//致命，牌多
+						};
+						let cards = player.getCards('he').sort((a, b) => get.value(a) - get.value(b));
+						let discards = [cards.shift()];
+						while (discards.reduce((a, b) => a + get.value(b), 0) / discards.length <= 8 && cards.length >= 2) {
+							//game.log(discards, '的平均收益：', discards.reduce((a, b) => a + get.value(b), 0) / discards.length, '<li>其他牌为', cards)
+							discards.add(cards.shift());
+							discards.add(cards.shift());
+						};
+						return discards.includes(card);
+					})
+					.forResultCards();
+				if (cards) {
+					var count = Math.floor((cards.length - 1) / 2);
+					if (count > 0) {
+						game.log('#g「风蚀」', player, '减少了', count, '点风蚀伤害');
+						if (trigger.num > 0) trigger.num -= count;
+					}
 				}
 			}
 		}
-	}
-	game.addNature('hyyz_quantum', '量子', {
-		audio: undefined,
-		linked: true,
-		order: 80,
-		background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_quantum.png',
-		lineColor: [80, 0, 180],
-		color: [80, 0, 180],
-	});
-	lib.skill._hyyz_quantum = {
-		trigger: {
-			player: "useCardToPlayered"
-		},
-		forced: true,
-		priority: -Infinity,
-		popup: false,
-		filter(event, player) {
-			return player.countCards('he', (card) => player.canRecast(card)) && get.name(event.card) == 'sha' && game.hasNature(event.card, 'hyyz_quantum');
-		},
-		async content(event, trigger, player) {
-			const cards = await player.chooseCard(`纠缠`, `你可以重铸一张牌，${get.translation(trigger.target)}将随机重铸一张同类型的牌`, 'he', function (card) {
-				return _status.event.player.canRecast(card);
-			}).set('ai', (card) => 8 - get.value(card)).forResultCards();
-			if (cards) {
-				await player.recast(cards);
-				const loses = trigger.target.getCards('he', card => get.type2(card) == get.type2(cards[0]));
-				if (loses.length) {
-					trigger.target.recast(loses.randomGet());
-					game.log('#g「量子」', trigger.target, '被', player, '纠缠了');
-				} else {
-					game.log('#g「量子」', player, '自我纠缠ing');
-				}
-
-			};
-		},
-	}
-	game.addNature('hyyz_imaginary', '虚数', {
-		audio: undefined,
-		linked: true,
-		order: 90,
-		background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_imaginary.png',
-		lineColor: [255, 255, 0],
-		color: [255, 255, 0],
-	});
-	lib.skill._hyyz_imaginary = {
-		trigger: {
-			player: ["damageBegin4", "useCardToPlayered"],
-		},
-		forced: true,
-		priority: -Infinity,
-		popup: false,
-		filter(event, player) {
-			if (event.name == 'damage') {
-				return !player.hasSkill('hyyz_imaginary_buff') && event.hasNature('hyyz_imaginary')
-			} else {
-				return event.targets.some(current => !current.hasSkill('hyyz_imaginary_buff')) && game.hasNature(event.card, "hyyz_imaginary");
-			}
-		},
-		async content(event, trigger, player) {
-			if (trigger.name == 'damage') {
-				player.addTempSkill('hyyz_imaginary_buff');
-				player.markSkill('hyyz_imaginary_buff');
-				game.log('#g「虚数」', player, '本回合护甲和防具失效');
-			} else {
-				game.log('#g「虚数」', trigger.targets, '本回合护甲和防具失效');
-				trigger.targets.forEach(current => {
-					if (!current.hasSkill('hyyz_imaginary_buff')) {
-						current.addTempSkill('hyyz_imaginary_buff');
-						current.markSkill('hyyz_imaginary_buff');
+		game.addNature('hyyz_quantum', '量子', {
+			audio: undefined,
+			linked: true,
+			order: 80,
+			background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_quantum.png',
+			lineColor: [80, 0, 180],
+			color: [80, 0, 180],
+		});
+		lib.skill._hyyz_quantum = {
+			trigger: {
+				player: "useCardToPlayered"
+			},
+			forced: true,
+			priority: -Infinity,
+			popup: false,
+			filter(event, player) {
+				return player.countCards('he', (card) => player.canRecast(card)) && get.name(event.card) == 'sha' && game.hasNature(event.card, 'hyyz_quantum');
+			},
+			async content(event, trigger, player) {
+				const cards = await player.chooseCard(`纠缠`, `你可以重铸一张牌，${get.translation(trigger.target)}将随机重铸一张同类型的牌`, 'he', function (card) {
+					return _status.event.player.canRecast(card);
+				}).set('ai', (card) => 8 - get.value(card)).forResultCards();
+				if (cards) {
+					await player.recast(cards);
+					const loses = trigger.target.getCards('he', card => get.type2(card) == get.type2(cards[0]));
+					if (loses.length) {
+						trigger.target.recast(loses.randomGet());
+						game.log('#g「量子」', trigger.target, '被', player, '纠缠了');
+					} else {
+						game.log('#g「量子」', player, '自我纠缠ing');
 					}
-				})
-			}
-		},
+
+				};
+			},
+		}
+		game.addNature('hyyz_imaginary', '虚数', {
+			audio: undefined,
+			linked: true,
+			order: 90,
+			background: 'extension/忽悠宇宙/asset/hyyzCard/image/hyyz_imaginary.png',
+			lineColor: [255, 255, 0],
+			color: [255, 255, 0],
+		});
+		lib.skill._hyyz_imaginary = {
+			trigger: {
+				player: ["damageBegin4", "useCardToPlayered"],
+			},
+			forced: true,
+			priority: -Infinity,
+			popup: false,
+			filter(event, player) {
+				if (event.name == 'damage') {
+					return !player.hasSkill('hyyz_imaginary_buff') && event.hasNature('hyyz_imaginary')
+				} else {
+					return event.targets.some(current => !current.hasSkill('hyyz_imaginary_buff')) && game.hasNature(event.card, "hyyz_imaginary");
+				}
+			},
+			async content(event, trigger, player) {
+				if (trigger.name == 'damage') {
+					player.addTempSkill('hyyz_imaginary_buff');
+					player.markSkill('hyyz_imaginary_buff');
+					game.log('#g「虚数」', player, '本回合护甲和防具失效');
+				} else {
+					game.log('#g「虚数」', trigger.targets, '本回合护甲和防具失效');
+					trigger.targets.forEach(current => {
+						if (!current.hasSkill('hyyz_imaginary_buff')) {
+							current.addTempSkill('hyyz_imaginary_buff');
+							current.markSkill('hyyz_imaginary_buff');
+						}
+					})
+				}
+			},
+		}
+		lib.skill.hyyz_imaginary_buff = {
+			charlotte: true,
+			superCharlotte: true,
+			unique: true,
+			mark: true,
+			marktext: '※',
+			intro: {
+				name: '虚数',
+				content: '本回合防具和护甲失效'
+			},
+			ai: {
+				nohujia: true,
+				"unequip2": true,
+			},
+		}
 	}
-	lib.skill.hyyz_imaginary_buff = {
-		charlotte: true,
-		superCharlotte: true,
-		unique: true,
-		mark: true,
-		marktext: '※',
-		intro: {
-			name: '虚数',
-			content: '本回合防具和护甲失效'
-		},
-		ai: {
-			nohujia: true,
-			"unequip2": true,
-		},
-	}
+
+
+	//——————————————异构——————————————//
+	Object.assign(lib.characterReplace, {
+		hyyz_bailu: ['hyyz_bailu', 'meng_danhengbailu'],//白露
+	})
 
 
 
@@ -287,9 +316,41 @@ async function PRECONTENT() {
 
 	//——————————————导入特殊机制——————————————//
 	hyyzBuffx();
-
+	import('./asset/index.js')
 }
-async function CONTENT(config, pack) { }
+async function CONTENT(config, pack) {
+	if ('强度评级') {
+		//sss传说，极致的强度
+		lib.rank.rarity['legend'].addArray([
+
+		])
+		//ss史诗，均衡强，或偶尔极致
+		lib.rank.rarity['epic'].addArray([
+
+		])
+		//a+s精品，普通武将
+		lib.rank.rarity['rare'].addArray([
+
+		])
+		//a平凡，天牢，强度拉稀
+		lib.rank.rarity['junk'].addArray([
+
+		])
+	}
+	if ('武将包') {
+		//——————————————自动开启武将包——————————————//
+		if (!lib.config['extension_忽悠宇宙_init']) {
+			//game.saveConfig('extension_忽悠宇宙_init', true);
+			//game.saveConfig('characters', lib.config.characters.concat(['hyyzCharacter', 'hyyzmysCharacter', 'hyyzmengCharacter', 'hyyzymCharacter', 'hyyzysltCharacter']))
+			//game.saveConfig('cards', lib.config.cards.concat(['hyyzCard', 'hyyzmengCard']));
+		};
+		//——————————————清理重复包——————————————//
+		lib.config.characters = [...new Set(lib.config.characters)];
+		lib.config.all.characters = [...new Set(lib.config.all.characters)];
+		lib.config.cards = [...new Set(lib.config.cards)];
+		lib.config.all.cards = [...new Set(lib.config.all.cards)];
+	}
+}
 const CONFIG = {
 	group: {//投稿武将入口
 		name: '<span style="color: #ea059e">投稿武将入口(点击打开图片)▶</span>',
@@ -297,7 +358,7 @@ const CONFIG = {
 		onclick() {
 			if (this.group == undefined) {
 				var more = ui.create.div('.group',
-					`<b style=" color: #ea059e" >紫灵谷の小宇宙：</b>519463281</br>
+					`<b style=" color: #ea059e" >紫灵谷の小宇宙：</b>519463281<br>
 					<img src ="${lib.assetURL}extension/忽悠宇宙/hyyzGroup.png" style ="width: 220px">`);
 				this.parentNode.insertBefore(more, this.nextSibling);
 				this.group = more;
@@ -309,7 +370,16 @@ const CONFIG = {
 			};
 		},
 	},
-	huyou: {//忽悠
+	type: {//分类方式
+		name: '更换扩展包分类',
+		init: '0',
+		intro: '按圆梦时间分类：依据圆梦入扩时间分类；按角色来源分类：大类为游戏名，小类为角色所属区域',
+		item: {
+			'0': '按圆梦时间分类',
+			//'1': '按角色来源分类',
+		}
+	},
+	huyou: {//忽悠模式
 		name: '弱点+buff系统(即时)',
 		intro: "若开启，角色开局获得两个弱点，部分武将的技能描述会被替换；若关闭，立即清除场上所有的弱点，新buff不能再被赋予",
 		init: true,
@@ -320,7 +390,7 @@ const CONFIG = {
 			}))
 		},
 	},
-	weaknessPosition: {
+	weaknessPosition: {//弱点显示位置
 		name: '弱点显示位置',
 		init: 'top',
 		intro: '弱点图标在武将牌附近的显示位置',
@@ -335,7 +405,7 @@ const CONFIG = {
 			if (game.countPlayer2() > 0) game.filterPlayer2(i => i.$syncWeakness())
 		}
 	},
-	weaknessPosition2: {
+	weaknessPosition2: {//弱点内外侧显示位置
 		name: '弱点内外侧显示位置',
 		init: 'out',
 		intro: '弱点图标在武将牌内外的情况',
@@ -401,7 +471,7 @@ const CONFIG = {
 					'',
 					'',
 				]
-				var more = ui.create.div('.loadUpdateContent', `　<div style="border: 1px solid blue"><font size=2px>` + strs.join('</br>') + `</font></div>`);
+				var more = ui.create.div('.loadUpdateContent', `　<div style="border: 1px solid blue"><font size=2px>` + strs.join('<br>') + `</font></div>`);
 				this.parentNode.insertBefore(more, this.nextSibling);
 				this.loadUpdateContent = more;
 				this.innerHTML = '<span style="color: #ea059e">历史更新记录(点击收起)▼</span>';
@@ -464,3 +534,11 @@ const HELP = {
         </ul>`,
 }
 export { ARENAREADY, PREPARE, PRECONTENT, CONTENT, CONFIG, HELP };
+
+`
+清理重复包
+新势力添加
+异构模板
+自动开启武将包和清理重复包
+强度评级
+`

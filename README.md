@@ -1,35 +1,33 @@
 # 扩展介绍
 
 无名杀扩展包《忽悠宇宙》
-英：HoYoSpace 简：hyyz
+英：hoyoSpace 简：hyyz
 
 ## 扩展结构
 
 ```
 忽悠宇宙/
 ├── extension.js                      # 扩展入口
-├── asset/                            # 源代码
-│   ├── index.js                      # 主文件
-│   ├── hyyz/                         # 角色模块（下同）
-│       ├── audio/                    # 音频文件
-│       ├── image/                    # 立绘文件
-│   ├── hyyzCard/                     # 卡牌模块
-│   ├── hyyzCharacter.js              # 扩展主武将
-│   ├── hyyzCard.js                   # 扩展主卡牌
-│   ├── mengCharacter2023.js          # 2023圆梦武将
-│   ├── mengCharacter2024.js          # 2024圆梦武将
-│   ├── mengCharacter2025.js          # 2025圆梦武将
-│   ├── mengCharacter2026.js          # 2026圆梦武将
-│   ├── mengCard.js                   # 圆梦卡牌
-│   ├── voice.js                      # 台词文件
+├── asset/                            # 主文件
+│   ├── index.js                      # 主代码
+│   ├── character2023.js              # 2023圆梦武将模块
+│   ├── character2024.js              # 2024圆梦武将模块
+│   ├── character2025.js              # 2025圆梦武将模块
+│   ├── character2026.js              # 2026圆梦武将模块
+│   ├── character/                    # 武将文件
+│       ├── audio/                        # 音频文件
+│       ├── image/                        # 立绘文件
+│   ├── card.js                       # 卡牌模块
+│   ├── card/                         # 卡牌文件
+│   ├── voice.js                      # 台词模块
 ├── other/                            # 其它文件
 │   ├── extension.css                 # 美化模块
 │   ├── hyyz.png                      # 扩展包名引用图
-│   ├── image/                        # 引用图
-│   ├── qhly/                         # 千幻引用图
-│   ├── tenth/                        # 十周年引用图
+│   ├── image/                        # 引用图文件
+│   ├── qhly/                         # 千幻引用图文件
+│   ├── tenth/                        # 十周年引用图文件
 ├── skin/                             # 千幻文件
-├── typings/                          # 标识
+├── typings/                          # 注释文件
 ├── lige.png                          # 扩展创办者
 ├── huohuoTail.png                    # 扩展现更新者
 ├── hyyzBuff.js                       # 特殊机制模块
@@ -64,4 +62,3 @@
 ## 许可证
 
 GPL-3.0
-
