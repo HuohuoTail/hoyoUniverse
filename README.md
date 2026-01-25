@@ -1,7 +1,7 @@
 # 扩展介绍
 
 无名杀扩展包《忽悠宇宙》
-英：hoyoUniverse 简：hyyz
+英：HoYoSpace 简：hyyz
 
 ## 扩展结构
 
@@ -64,3 +64,4 @@
 ## 许可证
 
 GPL-3.0
+
