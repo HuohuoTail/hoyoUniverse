@@ -44,7 +44,7 @@ export default async function () {
         help: HELP,
         config: CONFIG,
         package: {
-            intro: ext_info.intro,//介绍
+            intro: `　　　<img src="${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_hyyz.png" width="105.5" height="30"><br>` + ext_info.intro,//介绍
             diskURL: ext_info.diskURL,//联系方式
             author: ext_info.author,//作者
             version: `扩展版本：<span class='thundertext'>${ext_info.version}</span>`,//版本号

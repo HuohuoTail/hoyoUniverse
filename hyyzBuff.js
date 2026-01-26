@@ -1,6 +1,6 @@
 import { lib, game, ui, get, ai, _status } from '../../noname.js';
-export const hyyzBuffx = async function () {
-	{//——————————————hyyzBuff，感谢 寰宇星城《玄武江湖》系统原型——————————————//
+export const hyyzBuffx = async function () {//————————————————————————————//
+	if ('hyyzBuff，感谢 寰宇星城《玄武江湖》系统原型') {
 		lib.hyyz.buff = new Map([
 			//['buff名',['汉语','类型']],
 			['hyyzBuff_zhongshang', ['重伤', 'debuff']],
@@ -311,13 +311,13 @@ export const hyyzBuffx = async function () {
 							return get.timetype(event.card) == 'notime';
 						},
 						async content(event, trigger, player) {
-							const cards = await player
+							const { cards } = await player
 								.chooseCard(`纠缠：重铸一张${get.translation(get.type2(trigger.card))}牌，否则${get.translation(trigger.card)}结算两次`, function (card) {
 									return get.type2(card) == _status.event.typex;
 								})
 								.set('typex', get.type2(trigger.card))
 								.set('ai', (card) => 8 - get.value(card))
-								.forResultCards();
+								.forResult();
 							if (cards) {
 								game.log(trigger.player, '通过', '#r[纠缠]', '令', player, '重铸了', cards);
 								player.recast(cards)
@@ -396,7 +396,7 @@ export const hyyzBuffx = async function () {
 						trigger: {
 							player: "phaseZhunbeiBegin",
 						},
-						filter: function (event, player) {
+						filter(event, player) {
 							return player.hashyyzBuff('hyyzBuff_fenghua') && lib.skill['hyyzBuff_fenghua'].bang;
 						},
 						async content(event, trigger, player) {
@@ -1001,7 +1001,7 @@ export const hyyzBuffx = async function () {
 		}
 	}
 
-	{//——————————————weakness，感谢 冰雪雨柔《民间卡牌》的ui动画——————————————//
+	if ('weakness，感谢 冰雪雨柔《民间卡牌》的ui动画') {
 		lib.hyyz.weakness = new Map([
 			//['弱点名', ['汉语', '击破debuff']],
 			['fire', ['火', 'hyyzBuff_zhuoshao']],
@@ -1360,7 +1360,7 @@ export const hyyzBuffx = async function () {
 		}
 	}
 
-	{//——————————————尾巴自写的概念，部分机制由《大宝规则集》（萨巴鲁酱整理编写）提供设计支持——————————————//
+	if ('尾巴自写的概念，部分机制由《大宝规则集》（萨巴鲁酱整理编写）提供设计支持') {
 		/**中央区的牌（原来无名杀本身就有啊）
 		 * @param { Boolean } boolean 是否只要弃牌堆
 		 * @returns {card[]}
@@ -1572,7 +1572,297 @@ export const hyyzBuffx = async function () {
 			}
 		}
 
+		//调整体力值至x//(甲,5)//(甲,5,甲,5)
+		game.changeHpTo = function (...args) {
+			let currents = args.filter(i => get.itemtype(i) == 'player'),
+				hps = args.filter(i => typeof i == 'number');
+			const next = game.createEvent('changeHpTo', false);
+			next.currents = currents;
+			next.hps = hps;
+			next.setContent('changeHpTo')
+			return next;
+		}
+		lib.element.content.changeHpTo = async function (event, trigger, player) {
+			event.trigger('changeHpToBefore')
+			event.trigger('changeHpToBegin')
+			let currents = event.currents.slice(0, Math.min(event.currents.length, event.hps.length)),
+				hps = event.hps.slice(0, Math.min(event.currents.length, event.hps.length))
+			while (currents.length != 0 && hps.length != 0) {
+				const current = currents.shift(), hp = hps.shift();
+				if (current.hp != hp) {
+					game.log('<li>', current, '调整体力', `#r${current.hp}`, '至', `#g${hp}${current.maxHp < hp ? `→${Math.min(hp, current.maxHp)}` : ''}`)
+					await current.changeHp(hp - current.hp);
+				} else {
+					game.log('<li>', current, '无须调整体力值');
+				}
+				if (current.hp <= 0) await current.dying();
+			}
+			event.trigger('changeHpToEnd')
+			event.trigger('changeHpToAfter')
+
+		}
+		//方便管理（主要是更改文件地址方面），批量使用忽悠宇宙语音调用方法
+		game.hyyzSkillAudio = function (type = 'hyyz', skillname = '', ...args) {
+			game.playAudio('..', 'extension', '忽悠宇宙', 'asset', type, 'audio', skillname + (args.length > 0 ? args.randomGet() : ''));
+			return arguments
+		}
+		//检测一个扩展是否开启（未启用）
+		game.hyyz_hasExtension = function (str) {
+			if (!str || typeof str != 'string') return false;
+			if (lib.config && lib.config.extensions) {
+				for (var i of lib.config.extensions) {
+					if (i.indexOf(str) == 0) {
+						if (lib.config['extension_' + i + '_enable']) return true;
+					}
+				}
+			}
+			return false;
+		};
+
+		//进入隐匿（未启用）
+		lib.element.player.hyyzUnseen = async function (noChange) {
+			game.log(this, '隐匿');
+			const name = this.name || this.name1;//名字
+			const skillName = "hyyzUnseen_" + name;//不改变标记
+			if (noChange != false) {//不改变体力和上限
+				lib.skill[skillName] = {//做个技能记录隐匿前的体力
+					charlotte: true,
+					mark: true,
+					intro: {
+						content: "隐匿前体力值",
+					},
+				};
+				lib.translate[skillName] = `${this.hp}/${this.maxHp}`;//技能的翻译
+				this.storage[skillName] = {//技能的内容
+					hp: this.hp,
+					maxHp: this.maxHp,
+				};
+				this.addTempSkill(skillName, { player: "showCharacterAfter" });//获得这个技能直到亮将
+				this.when("showCharacterAfter")//亮将后，把当前记录的恢复。
+					.vars({
+						hp: this.hp,
+						maxHp: this.maxHp,
+						skillName: skillName,
+					}).then(() => {
+						player.hp = hp;
+						player.maxHp = maxHp;
+						player.update();
+						delete player.storage[skillName];
+					});
+			}
+			if (name && lib.character[name]) {//如果有武将的名字
+				this.storage.rawHp = this.hp;//默认的参数记录一下
+				this.storage.rawMaxHp = this.maxHp;
+				this.hp = 1;//变成隐匿1
+				this.maxHp = 1;
+				this.update();
+				let skills = lib.character[name][3];//技能组
+				if (this.name2 && lib.character[this.name2]?.[3]) skills.addArray(lib.character[this.name2][3]);
+				skills = skills.filter(skill => lib.translate[skill + "_info"]);
+				this.removeSkill(skills);//把当前的技能全部移除
+				if (!this.hiddenSkills) this.hiddenSkills = [];//初始化隐藏技能
+				this.hiddenSkills.addArray(skills);//塞进去
+				//手动隐匿
+				this.classList.add("unseen");
+				if (this.name2) this.classList.add("unseen2");
+				this.name = "unknown";
+
+				if (!this.node.name_seat && !_status.video) {
+					this.node.name_seat = ui.create.div(".name.name_seat", get.verticalStr(get.translation(this.name)), this);
+					this.node.name_seat.dataset.nature = get.groupnature(this.group);
+				}
+				//默认男性不显示体力
+				this.sex = "male";
+				this.storage.nohp = true;
+				this.node.hp.hide();
+				this.update();
+			}
+			if (noChange != false && document.querySelector(".mark-text.small-text"))
+				document.querySelector(".mark-text.small-text").textContent = lib.translate[skillName];
+		};
+
+		//调整手牌至x
+		lib.element.player.changeCardTo = function (num) {
+			let next = game.createEvent('changeCardTo', false);
+			next.player = this;
+			next.num = num;
+			next.setContent("changeCardTo");
+			return next;
+		}
+		lib.element.content.changeCardTo = async function (event, trigger, player) {
+			event.trigger('changeCardToBefore')
+			event.trigger('changeCardToBegin')
+			let cards = player.getCards('h');
+			if (typeof event.num != 'number') {
+				event.result = { bool: false }
+				return;
+			}
+			let change = event.num - cards.length;
+			if (change == 0) {
+				event.result = { bool: false }
+				return;
+			}
+			if (change > 0) {
+				const result = await player.draw(change).forResult();
+				if (result.length) {
+					event.result = {
+						bool: true,
+						cards: result,
+						num: change,
+						type: 'draw'
+					}
+				}
+			} else {
+				const result = await player.chooseToDiscard('须调整牌至' + event.num, 'h', -change, true).forResult();
+				if (result.bool) {
+					event.result = {
+						bool: true,
+						cards: result.cards,
+						num: change,
+						type: 'chooseToDiscard'
+					}
+				}
+			}
+			event.trigger('changeCardToEnd')
+			event.trigger('changeCardToAfter')
+		}
 
 
+		/**获取若干有花色有点数的影（未启用）
+		 * @param {number} count 数量
+		 * @returns {cards}
+		 */
+		get.hyyzYing = function (count) {
+			var cards = [];
+			if (typeof count != 'number') count = 1;
+			while (count--) {
+				let card = game.createCard('ying', ['spade', 'heart', 'club', 'diamond'].randomGet(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].randomGet());
+				cards.push(card);
+			}
+			return cards;
+		}
+
+
+		/**进行一次座次排布（未启用） */
+		lib.element.player.chooseToSwapSeat = function () {
+			let next = game.createEvent("chooseToSwapSeat", false);
+			next.player = this;
+			next.setContent('chooseToSwapSeat');
+			return next;
+		}
+		lib.element.content.chooseToSwapSeat = async function (event, trigger, player) {
+			//while (true) {
+			//	const targets = await player.chooseTarget("选择两名角色交换位置", 2).forResultTargets();
+			//	if (!targets) break;
+			//	game.swapSeat(targets[0], targets[1], null, null, true);
+			//}
+			const toSortPlayers = game.filterPlayer();
+			toSortPlayers.sortBySeat(game.findPlayer2(current => current.getSeatNum() == 1, true));
+			const next = player.chooseToMove("是否分配所有角色的座次？");
+			next.set("list", [
+				[
+					"（以下排列的顺序即为发动技能后角色的座次顺序）",
+					[
+						toSortPlayers.map(i => `${i.getSeatNum()}|${i.name}`),//['1|甲','2|乙','3|丙']
+						function (item, type, position, noclick, node) {
+							const info = item.split("|"),
+								_item = item;
+							const seat = parseInt(info[0]);
+							item = info[1];
+							if (node) {
+								node.classList.add("button");
+								node.classList.add("character");
+								node.style.display = "";
+							} else {
+								node = ui.create.div(".button.character", position);
+							}
+							node._link = item;
+							node.link = item;
+
+							const func = function (node, item) {
+								const currentPlayer = game.findPlayer(current => current.getSeatNum() == seat);
+								if (currentPlayer.classList.contains("unseen_show")) node.setBackground("hidden_image", "character");
+								else if (item != "unknown") node.setBackground(item, "character");
+								if (node.node) {
+									node.node.name.remove();
+									node.node.hp.remove();
+									node.node.group.remove();
+									node.node.intro.remove();
+									if (node.node.replaceButton) node.node.replaceButton.remove();
+								}
+								node.node = {
+									name: ui.create.div(".name", node),
+									group: ui.create.div(".identity", node),
+									intro: ui.create.div(".intro", node),
+								};
+								const infoitem = [currentPlayer.sex, currentPlayer.group, `${currentPlayer.hp}/${currentPlayer.maxHp}/${currentPlayer.hujia}`];
+								node.node.name.innerHTML = get.slimName(item);
+								if (lib.config.buttoncharacter_style == "default" || lib.config.buttoncharacter_style == "simple") {
+									if (lib.config.buttoncharacter_style == "simple") {
+										node.node.group.style.display = "none";
+									}
+									node.classList.add("newstyle");
+									node.node.name.dataset.nature = get.groupnature(get.bordergroup(infoitem));
+									node.node.group.dataset.nature = get.groupnature(get.bordergroup(infoitem), "raw");
+								}
+								node.node.name.style.top = "8px";
+								if (node.node.name.querySelectorAll("br").length >= 4) {
+									node.node.name.classList.add("long");
+									if (lib.config.buttoncharacter_style == "old") {
+										node.addEventListener("mouseenter", ui.click.buttonnameenter);
+										node.addEventListener("mouseleave", ui.click.buttonnameleave);
+									}
+								}
+								node.node.intro.innerHTML = lib.config.intro;
+								if (!noclick) {
+									lib.setIntro(node);
+								}
+								node.node.group.innerHTML = `<div>${get.cnNumber(seat, true)}号</div>`;
+								node.node.group.style.backgroundColor = get.translation(`${get.bordergroup(infoitem)}Color`);
+							};
+							node.refresh = func;
+							node.refresh(node, item);
+
+							node.link = _item;
+							node.seatNumber = seat;
+							node._customintro = uiintro => {
+								uiintro.add(`${get.translation(node._link)}(原${get.cnNumber(node.seatNumber, true)}号位)`);
+							};
+							return node;
+						},
+					],
+				],
+			]);
+			next.set("toSortPlayers", toSortPlayers.slice(0));
+			next.set("processAI", () => {
+				const players = get.event("toSortPlayers"),
+					player = get.player();
+				players.randomSort().sort((a, b) => get.attitude(player, b) - get.attitude(player, a));
+				return [players.map(i => `${i.getSeatNum()}|${i.name}`)];
+			});
+			const { bool, moved } = await next.forResult();
+			//moved = ['3|丙', '1|甲', '2|乙']
+			if (!bool) return;
+
+			const resultList = moved[0].map(info => parseInt(info.split("|")[0]));//[3, 1, 2]
+			const toSwapList = [];
+			const cmp = (a, b) => {
+				return resultList.indexOf(a) - resultList.indexOf(b);
+			};
+			for (let i of toSortPlayers) {//冒泡排序
+				for (let j of toSortPlayers) {
+					if (cmp(i.getSeatNum(), j.getSeatNum()) < 0) {
+						toSwapList.push([i, j]);
+						[i, j] = [j, i];
+					}
+				}
+			}
+			game.broadcastAll(toSwapList => {
+				for (const list of toSwapList) {
+					game.swapSeat(list[0], list[1], false);
+				}
+			}, toSwapList);
+			await game.delay();
+		}
 	}
 }

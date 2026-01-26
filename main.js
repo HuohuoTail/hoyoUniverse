@@ -137,11 +137,11 @@ async function PRECONTENT() {
 			forced: true,
 			priority: -Infinity,
 			popup: false,
-			filter: function (event, player) {
+			filter(event, player) {
 				return player.countCards('he') > 0 && event.hasNature('hyyz_wind');
 			},
 			async content(event, trigger, player) {
-				const cards = await player
+				const { cards } = await player
 					.chooseToDiscard(`风蚀`, `弃置至少一张牌；每多弃置两张，防止1点伤害`, 'he', [1, trigger.num * 2 + 1], true)
 					.set('ai', function (card) {
 						const trigger = _status.event.getTrigger(), player = _status.event.player;
@@ -160,7 +160,7 @@ async function PRECONTENT() {
 						};
 						return discards.includes(card);
 					})
-					.forResultCards();
+					.forResult();
 				if (cards) {
 					var count = Math.floor((cards.length - 1) / 2);
 					if (count > 0) {
@@ -189,9 +189,9 @@ async function PRECONTENT() {
 				return player.countCards('he', (card) => player.canRecast(card)) && get.name(event.card) == 'sha' && game.hasNature(event.card, 'hyyz_quantum');
 			},
 			async content(event, trigger, player) {
-				const cards = await player.chooseCard(`纠缠`, `你可以重铸一张牌，${get.translation(trigger.target)}将随机重铸一张同类型的牌`, 'he', function (card) {
+				const { cards } = await player.chooseCard(`纠缠`, `你可以重铸一张牌，${get.translation(trigger.target)}将随机重铸一张同类型的牌`, 'he', function (card) {
 					return _status.event.player.canRecast(card);
-				}).set('ai', (card) => 8 - get.value(card)).forResultCards();
+				}).set('ai', (card) => 8 - get.value(card)).forResult();
 				if (cards) {
 					await player.recast(cards);
 					const loses = trigger.target.getCards('he', card => get.type2(card) == get.type2(cards[0]));
@@ -260,12 +260,108 @@ async function PRECONTENT() {
 		}
 	}
 
+	//——————————————卡牌——————————————//
+	lib.skill._hyyz_heiyuanbaihua = {//黑渊白花合成机制
+		trigger: {
+			player: "equipAfter",
+		},
+		filter(event, player) {
+			if (lib.inpile.includes('hyyz_heiyuanbaihua')) return false;
+
+			let names = ['hyyz_baihua', 'hyyz_heiyuan'];
+			if (!event.cards.some(card => names.includes(card.name)) || !player.getCards('e', card => names.includes(card.name))) return false;
+			names.remove(event.cards.find(card => names.includes(card.name)).name);
+			return event.getl && event.getl(player).es?.some(card => card.name == names[0]);
+		},
+		priority: Infinity,
+		silent: true,
+		async content(event, trigger, player) {
+			let names = ['hyyz_baihua', 'hyyz_heiyuan'];
+			const before = trigger.getl(player).es.find(card => names.includes(card.name));
+			if (before.fix) before.fix();
+			if (before.remove) before.remove();
+			if (!before.destroyed) before.destroyed = true;
+			lib.inpile.remove(before.name);
+			names.remove(before.name);
+
+			const after = trigger.cards.find(card => names[0] == card.name);
+			await player.lose([after], ui.special);
+			if (after.fix) after.fix();
+			if (after.remove) after.remove();
+			if (!after.destroyed) after.destroyed = true;
+			lib.inpile.remove(after.name);
+
+			game.log(before, '和', after, '合为', '#y黑渊白花【♣12】');
+			const card = game.createCard2('hyyz_heiyuanbaihua', 'club', 12);
+			player.equip(card);
+			lib.inpile.add('hyyz_heiyuanbaihua');
+		}
+	}
+	/**玩家显示智库的x张牌 */
+	lib.element.player.zhiku_shown = function (count = 1) {
+		lib.translate.zhiku = '智库';
+		const player = this;
+		let cards = Array.from(ui.cardPile.childNodes).slice(0, count);
+		let gainCards = cards.map((card) => {
+			let cardx = ui.create.card()
+			cardx.init(get.cardInfo(card));
+			cardx._cardid = card.cardid;
+			return cardx;
+		});
+		player.directgains(gainCards, null, "zhiku");
+		const observer = new MutationObserver((mutLists, observer) => {
+			for (const mutList of mutLists) {
+				if (mutList.type === 'childList') {
+					let cards = Array.from(ui.cardPile.childNodes).slice(0, count);
+					let gainCards = cards.map((card) => {
+						let cardx = ui.create.card().init(get.cardInfo(card));
+						cardx._cardid = card.cardid;
+						return cardx;
+					});
+					let deleteCards = player.getCards('s', card => card.hasGaintag('zhiku'));
+					if (player.isOnline2()) {
+						player.send(function (cards, player) {
+							cards.forEach(i => i.delete());
+							if (player == game.me) ui.updatehl();
+						}, deleteCards, player);
+					}
+					deleteCards.forEach(card => card.delete());
+					player.directgains(gainCards, null, "zhiku");
+					if (player == game.me) ui.updatehl();
+				}
+			}
+		});
+		return observer;
+	}
+	/**失去虚空万藏 */
+	lib.skill._xukongwanzang = {
+		trigger: {
+			player: ["loseBegin"]
+		},
+		silent: true,
+		forced: true,
+		forceDie: true,
+		filter(event, player) {
+			return event.cards.some(card => card.name.indexOf("hyyz_xvkong") == 0);
+		},
+		async content(event, trigger, player) {
+			if (player.storage.zhiku_shown) {
+				player.storage.zhiku_shown.disconnect(ui.cardPile, { childList: true, subtree: true });
+				delete player.storage.zhiku_shown;
+			}
+			player.getCards('s', card => card.hasGaintag('zhiku')).forEach(i => i.delete());
+		},
+		//不准使用！
+		mod: {
+			cardEnabled2(card, player, bool) {
+				if (get.itemtype(card) == 'card' && (card.gaintag?.includes('zhiku'))) return false;
+			},
+		},
+	};
 
 	//——————————————异构——————————————//
 	Object.assign(lib.characterReplace, {
-		hyyz_bailu: ['hyyz_bailu', 'meng_danhengbailu'],//白露
 	})
-
 
 
 	//——————————————详情介绍——————————————//
@@ -376,12 +472,12 @@ const CONFIG = {
 		intro: '按圆梦时间分类：依据圆梦入扩时间分类；按角色来源分类：大类为游戏名，小类为角色所属区域',
 		item: {
 			'0': '按圆梦时间分类',
-			//'1': '按角色来源分类',
+			'1': '按角色来源分类',
 		}
 	},
 	huyou: {//忽悠模式
 		name: '弱点+buff系统(即时)',
-		intro: "若开启，角色开局获得两个弱点，部分武将的技能描述会被替换；若关闭，立即清除场上所有的弱点，新buff不能再被赋予",
+		intro: "若开启，角色开局获得两个弱点，部分武将的技能效果消失；若关闭，立即清除场上所有的弱点，新buff不能再被赋予",
 		init: true,
 		clear: false,
 		update() {
@@ -534,11 +630,3 @@ const HELP = {
         </ul>`,
 }
 export { ARENAREADY, PREPARE, PRECONTENT, CONTENT, CONFIG, HELP };
-
-`
-清理重复包
-新势力添加
-异构模板
-自动开启武将包和清理重复包
-强度评级
-`

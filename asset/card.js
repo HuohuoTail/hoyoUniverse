@@ -46,7 +46,7 @@ export const hyyzcards = {
 		hyyz_imaginarydamage: {
 			ai: {
 				unequip_ai: true,
-				skillTagFilter: function (player, tag, arg) {
+				skillTagFilter(player, tag, arg) {
 					if (arg?.name == "sha" && arg.nature.includes('hyyz_imaginary') && arg.name == 'unequip_ai') return true;
 					return true;
 				},
@@ -79,8 +79,8 @@ export const hyyzcards = {
 		//基本牌
 		hyyz_chuochuo_info: [`戳戳`,
 			`<li>戳你：出牌阶段，对一名其他角色使用。<span class="hyyzGroup">骊歌</span>戳一下目标角色，其随机获得一个负面${get.hyyzIntroduce('效果')}。`,
-			`<li>“小伙伴们，好久不见啦！”</br>去年今日此门中，</br>人面桃花相映红。</br>人面不知何处去，</br>桃花依旧笑春风。
-			<li>“再未聆骊歌温柔的问好声…”</br>骊歌捣药秋复春，</br>尾巴孤栖与谁邻？</br>今人不见古时月，</br>今月曾经照古人。`
+			`<li>“小伙伴们，好久不见啦！”<br>去年今日此门中，<br>人面桃花相映红。<br>人面不知何处去，<br>桃花依旧笑春风。
+			<li>“再未聆骊歌温柔的问好声…”<br>骊歌捣药秋复春，<br>尾巴孤栖与谁邻？<br>今人不见古时月，<br>今月曾经照古人。`
 		],
 		hyyz_chuochuo: {
 			legend: true,
@@ -89,7 +89,7 @@ export const hyyzcards = {
 			type: 'basic',
 			enable: true,
 			selectTarget: 1,
-			filterTarget: function (card, player, target) {
+			filterTarget(card, player, target) {
 				return target != player;
 			},
 			modTarget: true,
@@ -129,17 +129,17 @@ export const hyyzcards = {
 		},
 		hyyz_lingfu_info: ['灵符',
 			`<li>禳命：出牌阶段，对一名角色使用，目标角色${get.hyyzIntroduce('净化')}。若其已受伤/未受伤，其回复1点体力/摸一张牌。`,
-			`“驱邪…缚魅…灵符…保命…”</br>不知名的角落传来怯怯的声音。`
+			`“驱邪…缚魅…灵符…保命…”<br>不知名的角落传来怯怯的声音。`
 		],
 		hyyz_lingfu: {
 			fullskin: true,
 			type: "basic",
 			cardcolor: "red",
 			enable: true,
-			filterTarget: function (card, player, target) {
+			filterTarget(card, player, target) {
 				return true;
 			},
-			content: function () {
+			content() {
 				target.hyyzJinghua();
 				if (target.isDamaged()) {
 					target.recover();
@@ -279,8 +279,8 @@ export const hyyzcards = {
 		//锦囊牌
 		hyyz_zisu_info: ["自塑尘脂",
 			"<li>抽卡：出牌阶段，对你使用。目标角色声明牌的主类别及检索方向，然后检索之。若失败，则改为摸两张牌。",
-			`›基本牌:伤害/回复/${get.hyyzIntroduce('断拒')}</br>
-			›锦囊牌:延时/伤害/${get.hyyzIntroduce('断拒')}</br>
+			`›基本牌:伤害/回复/${get.hyyzIntroduce('断拒')}<br>
+			›锦囊牌:延时/伤害/${get.hyyzIntroduce('断拒')}<br>
 			›装备牌:武器/防具/防御马/进攻马/宝物`],
 		hyyz_zisu: {
 			fullskin: true,
@@ -295,7 +295,7 @@ export const hyyzcards = {
 				const map = Object.assign({}, lib.card.hyyz_zisu.controlMap), target = event.target;
 				//第一步：类型
 				const list1 = Object.keys(map);
-				const control1 = await target.chooseControl(list1)
+				const { control1 } = await target.chooseControl(list1)
 					.set('list1', list1)
 					.set('prompt', '自塑尘脂')
 					.set('prompt2', '一、选择定向牌的类型')
@@ -321,11 +321,11 @@ export const hyyzcards = {
 						if (list1.includes('trick')) return 'trick';
 						return list1.randomGet()
 					})
-					.forResultControl();
+					.forResult();
 				if (!control1 || control1 == 'cancel2') return;
 				//第二步：描述
 				const list2 = map[control1];
-				const control2 = await target.chooseControl(list2)
+				const { control2 } = await target.chooseControl(list2)
 					.set('list2', list2).set('control1', control1)
 					.set('prompt', '自塑尘脂')
 					.set('prompt2', '二、选择描述包含的词语')
@@ -353,7 +353,7 @@ export const hyyzcards = {
 						}
 						return list2.randomGet();
 					})
-					.forResultControl();
+					.forResult();
 				if (!control2 || control2 == 'cancel2') return;
 				//第三步：检索
 				let filter1 = function (card) {
@@ -408,7 +408,7 @@ export const hyyzcards = {
 		},
 		hyyz_qiongguan_info: ["穷观阵",
 			"<li>成竹：此牌不计入手牌上限。<li>穷观：一名角色的判定牌生效时，对此牌使用。若判定牌与穷观阵的花色相同/不同，替换/代替之。",
-			"一饮一琢，莫非前定；</br>兰因絮果，必有来因。"],
+			"一饮一琢，莫非前定；<br>兰因絮果，必有来因。"],
 		hyyz_qiongguan: {
 			legend: true,
 			fullskin: true,
@@ -457,7 +457,7 @@ export const hyyzcards = {
 		//神之键
 		hyyz_xvkong_info: ["虚空万藏",
 			"<li>智库：锁定技，牌堆顶的牌对你可见。<li>拟态：出牌阶段限一次，你可以将虚空万藏拟态为任意装备牌（除木牛流马外）。",
-			"Ⅰ启示之键·理</br>"],
+			"Ⅰ启示之键·理<br>"],
 		hyyz_xvkong: {//8/4
 			legend: true,
 			fullskin: true,
@@ -662,7 +662,7 @@ export const hyyzcards = {
 		},
 		hyyz_heiyuan_info: ["黑渊",
 			"<li>解构：每回合限一次，你使用【杀】对体力值不小于你的角色造成伤害后，你可以令其失去1点体力。",
-			"Ⅵ创生之键·死</br>被【白花】替换后，与此牌合成为【黑渊白花】",],
+			"Ⅵ创生之键·死<br>被【白花】替换后，与此牌合成为【黑渊白花】",],
 		hyyz_heiyuan: {//3/3
 			epic: true,
 			fullskin: true,
@@ -704,7 +704,7 @@ export const hyyzcards = {
 		},
 		hyyz_baihua_info: ["白花",
 			"<li>逆流：每回合限一次，体力值不小于你角色使用【杀】对你造成伤害后，你可以回复1点体力。",
-			"Ⅵ创生之键·死</br>被【黑渊】替换后，与此牌合成为【黑渊白花】",],
+			"Ⅵ创生之键·死<br>被【黑渊】替换后，与此牌合成为【黑渊白花】",],
 		hyyz_baihua: {//2-3-5/3.5
 			epic: true,
 			fullskin: true,
@@ -792,7 +792,7 @@ export const hyyzcards = {
 		},
 		hyyz_tianhuo1_info: ["天火双枪",
 			"<li>天火·出鞘：出牌阶段限一次，你可以失去1点体力，造成1点火焰伤害。",
-			"Ⅶ破坏之键·炎</br>你死亡或造成击杀时，升级为天火大剑。"],
+			"Ⅶ破坏之键·炎<br>你死亡或造成击杀时，升级为天火大剑。"],
 		hyyz_tianhuo1: {//3.5-8/4.5
 			epic: true,
 			fullskin: true,
@@ -837,7 +837,7 @@ export const hyyzcards = {
 		},
 		hyyz_tianhuo2_info: ["天火大剑",
 			"<li>天火·出鞘：出牌阶段限一次，你可以失去1点体力，造成1点火焰伤害并令其" + get.hyyzIntroduce('灼烧') + "。",
-			"Ⅶ破坏之键·炎</br>你死亡或造成击杀时，升级为劫灭。"],
+			"Ⅶ破坏之键·炎<br>你死亡或造成击杀时，升级为劫灭。"],
 		hyyz_tianhuo2: {//3.5-8/4.5
 			epic: true,
 			fullskin: true,
@@ -1112,9 +1112,9 @@ export const hyyzcards = {
 				attackFrom: 0,
 			},
 			loseDelay: false,
-			onEquip: function () {
+			onEquip() {
 			},
-			onLose: function () {
+			onLose() {
 			},
 			ai: {
 				equipValue(card, player) {//遍历手牌，往往优先于basic里的//进攻4防御7//给自己看的
@@ -1240,7 +1240,7 @@ export const hyyzcards = {
 		//其他
 		hyyz_weiba_info: ["尾巴",
 			"<li>附生：锁定技，额定回合结束后，你抉择：失去1点体力并执行一个被尾巴控制的回合；尾巴移至随机角色的宝物栏。",
-			"艺海深耕岁月悠，</br>绝技在身意难休。</br>恐其湮没随尘逝，</br>急觅贤徒授秘猷。"],
+			"艺海深耕岁月悠，<br>绝技在身意难休。<br>恐其湮没随尘逝，<br>急觅贤徒授秘猷。"],
 		hyyz_weiba: {//0.5-6/2
 			legend: true,
 			fullskin: true,
@@ -1255,7 +1255,7 @@ export const hyyzcards = {
 				},
 				basic: {
 					equipValue: 2,
-					order: function (card, player) {
+					order(card, player) {
 						if (player && player.hasSkillTag('reverseEquip')) {
 							return 8.5 - get.equipValue(card, player) / 20;
 						}
@@ -1287,7 +1287,7 @@ export const hyyzcards = {
 		},
 		hyyz_zhili_info: ["支离剑",
 			"<li>裂骨：此牌的攻击范围视为你已损失的体力值。<li>碎芒：你使用伤害即时牌指定目标后，可以失去1点体力并改为直接结算对应属性的伤害。",
-			"生之来不能却，其去不能止</br>死亡亦如此"],
+			"生之来不能却，其去不能止<br>死亡亦如此"],
 		hyyz_zhili: {//0.5-2/0.5
 			audio(card, sex) { },
 			epic: true,
@@ -1341,7 +1341,7 @@ export const hyyzcards = {
 			cardcolor: "red",
 			type: "basic",
 			global: "mengLife_skill",
-			derivation: "meng_ruanmei",
+			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
 					order: 7.2,
@@ -1362,7 +1362,7 @@ export const hyyzcards = {
 			cardcolor: "black",
 			type: "basic",
 			global: "mengLife_skill",
-			derivation: "meng_ruanmei",
+			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
 					order: 7.2,
@@ -1383,7 +1383,7 @@ export const hyyzcards = {
 			cardcolor: "red",
 			type: "basic",
 			global: "mengLife_skill",
-			derivation: "meng_ruanmei",
+			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
 					order: 7.2,
@@ -1404,7 +1404,7 @@ export const hyyzcards = {
 			cardcolor: "black",
 			type: "basic",
 			global: "mengLife_skill",
-			derivation: "meng_ruanmei",
+			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
 					order: 7.2,
@@ -1423,7 +1423,7 @@ export const hyyzcards = {
 		meng_jiwang: {
 			fullskin: true,
 			type: "trick",
-			enable: function (card, player) {
+			enable(card, player) {
 				var hs = player.getCards("h", function (cardx) {
 					return cardx != card && (!card.cards || !card.cards.includes(cardx));
 				});
@@ -1439,11 +1439,11 @@ export const hyyzcards = {
 			},
 			selectTarget: -1,
 			toself: true,
-			filterTarget: function (card, player, target) {
+			filterTarget(card, player, target) {
 				return target == player;
 			},
 			modTarget: true,
-			content: function () {
+			content() {
 				"step 0";
 				var hs = player.getCards("h");
 				if (hs.length) {
@@ -1498,7 +1498,7 @@ export const hyyzcards = {
 					value: 5,
 				},
 				result: {
-					target: function (player, target) {
+					target(player, target) {
 						if (
 							target.needsToDiscard(1) ||
 							!target.countCards("h", function (card) {
@@ -1524,7 +1524,7 @@ export const hyyzcards = {
 				return player.hp < player.maxHp;
 			},
 			selectTarget: -1,
-			filterTarget: function (card, player, target) {
+			filterTarget(card, player, target) {
 				return target == player && target.hp < target.maxHp;
 			},
 			modTarget(card, player, target) {
@@ -1693,11 +1693,11 @@ export const hyyzcards = {
 			},
 
 		},
-		meng_mengxiang_info: ["梦想一心", "每回合限一次，你可以改变一种装备栏的废除状态，视为使用或打出一张雷【杀】。</br>你对唯一目标使用【杀】时，若你没有<span class=\"thundertext\" style=\"font-family: yuanli\">护甲/防具/非锁定技/手牌</span>，目标角色的对应元素失效。"],
+		meng_mengxiang_info: ["梦想一心", "每回合限一次，你可以改变一种装备栏的废除状态，视为使用或打出一张雷【杀】。<br>你对唯一目标使用【杀】时，若你没有<span class=\"thundertext\" style=\"font-family: yuanli\">护甲/防具/非锁定技/手牌</span>，目标角色的对应元素失效。"],
 		meng_mengxiang: {//5/5
 			legend: true,
 			fullskin: true,
-			derivation: 'meng_leidianying',
+			derivation: 'hyyz_ys_leidianying',
 			type: "equip",
 			subtype: "equip1",
 			skills: ["meng_mengxiang_skill1", "meng_mengxiang_skill2"],
@@ -2039,10 +2039,10 @@ export const hyyzcards = {
 			prompt2(event, player) {
 				return '令' + get.translation(event.player) + '失去1点体力？'
 			},
-			check: function (event, player) {
+			check(event, player) {
 				return get.attitude(player, event.player) < 0;
 			},
-			content: function () {
+			content() {
 				trigger.player.loseHp()
 			},
 			ai: {
@@ -2060,12 +2060,12 @@ export const hyyzcards = {
 				player: "damageEnd",
 			},
 			usable: 1,
-			filter: function (event, player) {
+			filter(event, player) {
 				if (!player.getDamagedHp()) return false;
 				return event.source && event.source.hp >= player.hp && event.card && event.card.name == 'sha';
 			},
 			prompt2: '回复1点体力',
-			content: function () {
+			content() {
 				player.recover()
 			},
 			ai: {
@@ -2125,7 +2125,7 @@ export const hyyzcards = {
 				return player.getEquips('hyyz_heiyuanbaihua').length;
 			},
 			async cost(event, trigger, player) {
-				const links = await player
+				const { links } = await player
 					.chooseButton([
 						'是否发动绽放&百岁兰？',
 						`弃置【白花】以<span class='greentext'>百岁兰</span>；弃置【黑渊】以<span class='firetext'>绽放</span>`,
@@ -2137,7 +2137,7 @@ export const hyyzcards = {
 						if (att < 0) return button.link[2] == 'hyyz_heiyuan'
 						return 0;
 					})
-					.forResultLinks();
+					.forResult();
 				if (links) {
 					event.result = {
 						bool: true,
@@ -2257,7 +2257,7 @@ export const hyyzcards = {
 		hyyz_yvdu_skill: {
 			equipSkill: true,
 			mod: {
-				maxHandcard: function (player, num) {
+				maxHandcard(player, num) {
 					return num + player.getEquips('5').filter(i => i.name.startsWith('hyyz_yvdu')).length * 2;
 				},
 			},
@@ -2392,13 +2392,13 @@ export const hyyzcards = {
 
 				naturesList = naturesList.map(name => [name, get.translation(name)]);
 
-				const links = await player
-					.chooseButton([get.prompt('hyyz_xuanyuan_skill1') + '</br>附魔任意属性', [naturesList.slice(0), 'tdnodes']], [1, naturesList.length])
+				const { links } = await player
+					.chooseButton([get.prompt('hyyz_xuanyuan_skill1') + '<br>附魔任意属性', [naturesList.slice(0), 'tdnodes']], [1, naturesList.length])
 					.set('ai', (button) => {
 						if (button.link == 'hyyz_wind') return false
 						return true;
 					})
-					.forResultLinks();
+					.forResult();
 				if (links) {
 					event.result = {
 						bool: true,
@@ -2457,13 +2457,13 @@ export const hyyzcards = {
 				let naturesList = lib.skill.hyyz_xuanyuan_skill1.historyNature()
 				naturesList = naturesList.map(name => [name, get.translation(name)]);
 
-				const links = await player
-					.chooseButton([get.prompt('hyyz_taixv_skill') + '</br>对' + get.translation(trigger.player) + '造成1点附魔任一出现过的属性的伤害',
+				const { links } = await player
+					.chooseButton([get.prompt('hyyz_taixv_skill') + '<br>对' + get.translation(trigger.player) + '造成1点附魔任一出现过的属性的伤害',
 					[naturesList.slice(0), 'tdnodes']])
 					.set('ai', (button) => {
 						return true
 					})
-					.forResultLinks();
+					.forResult();
 				if (links) {
 					event.result = {
 						bool: true,
@@ -2521,9 +2521,11 @@ export const hyyzcards = {
 					lib.character.hyyz_dizang_character = ['none', 'hyyz_other', 2, ['hyyzwuming'], ['ext:忽悠宇宙/asset/hyyzCard/image/hyyz_dizang_character.jpg']]
 					lib.translate.hyyz_dizang_character = '地藏御魂';
 					lib.characterTitle.hyyz_dizang_character = '#r地藏御魂的鬼神'
-					const result = await player.createFellow('hyyz_dizang_character', trigger.target.getSeatNum()).forResult();
-					if (get.itemtype(result.fellow) == 'player') {
-						result.fellow.when({ player: 'phaseAfter' }).then(() => {
+					const { fellow } = await player
+						.createFellow('hyyz_dizang_character', trigger.target.getSeatNum())
+						.forResult();
+					if (get.itemtype(fellow) == 'player') {
+						fellow.when({ player: 'phaseAfter' }).then(() => {
 							player.die();
 						})
 					}
@@ -2550,9 +2552,11 @@ export const hyyzcards = {
 			},
 			forced: true,
 			async content(event, trigger, player) {
-				const bool = await player.chooseBool(get.prompt('hyyz_weiba_skill') + '失去1点体力，让尾巴大爷代你玩一回合；或让尾巴大爷伤心离开').set('ai', () => {
-					return player.hp > 2
-				}).forResultBool();
+				const { bool } = await player
+					.chooseBool(get.prompt('hyyz_weiba_skill') + '失去1点体力，让尾巴大爷代你玩一回合；或让尾巴大爷伤心离开').set('ai', () => {
+						return player.hp > 2
+					})
+					.forResult();
 				if (bool) {
 					await player.loseHp();
 					player.when({
@@ -2672,12 +2676,12 @@ export const hyyzcards = {
 				});
 			},
 			mod: {
-				ignoredHandcard: function (card, player) {
+				ignoredHandcard(card, player) {
 					if (get.name(card) == 'hyyz_qiongguan') {
 						return true;
 					}
 				},
-				cardDiscardable: function (card, player, name) {
+				cardDiscardable(card, player, name) {
 					if (name == "phaseDiscard" && get.name(card) == 'hyyz_qiongguan') {
 						return false;
 					}
@@ -2695,7 +2699,7 @@ export const hyyzcards = {
 
 		mengLife_skill: {
 			enable: ["chooseToUse", "chooseToRespond"],
-			filter: function (event, player) {
+			filter(event, player) {
 				if (event.filterCard({ name: 'wuxie' }, player, event) ||
 					event.filterCard({ name: 'shan' }, player, event)) return false;
 				if (player.countCards('hes', function (card) {
@@ -2709,7 +2713,7 @@ export const hyyzcards = {
 				return false;
 			},
 			chooseButton: {
-				dialog: function (event, player) {
+				dialog(event, player) {
 					var map = {
 						'meng_taohuasu': false,//红桃 回复
 						'meng_meihuagao': false,//梅花 弃置
@@ -2765,7 +2769,7 @@ export const hyyzcards = {
 					if (!list1.length && !list2.length && !list3.length && !list4.length) dialog.addText('悲！没有奖励……');
 					return dialog;
 				},
-				check: function (button) {
+				check(button) {
 					if (_status.event.getParent().type != 'phase') return 1;
 					var player = _status.event.player;
 					if (['wugu', 'zhulu_card', 'yiyi', 'lulitongxin', 'lianjunshengyan', 'diaohulishan'].includes(button.link[2])) return 0;
@@ -2774,11 +2778,11 @@ export const hyyzcards = {
 						nature: button.link[3],
 					});
 				},
-				backup: function (links, player) {
+				backup(links, player) {
 					var life = links[0][2];
 					var life_info = lib.translate[life + '_info'];
 					return {
-						filterCard: function (card) {
+						filterCard(card) {
 							if (life_info.indexOf('回复') != -1 && get.name(card) == 'meng_taohuasu') return true;
 							if (life_info.indexOf('弃置') != -1 && get.name(card) == 'meng_meihuagao') return true;
 							if (life_info.indexOf('获得') != -1 && get.name(card) == 'meng_caomeibing') return true;
@@ -2786,7 +2790,7 @@ export const hyyzcards = {
 							return false;
 						},
 						popname: true,
-						check: function (card) {
+						check(card) {
 							return 10;
 						},
 						position: 'hes',
@@ -2796,11 +2800,11 @@ export const hyyzcards = {
 						},
 					};
 				},
-				prompt: function (links, player) {
+				prompt(links, player) {
 					return '将一张【生命】牌当做【' + (get.translation(links[0][3]) || '') + get.translation(links[0][2]) + '】使用';
 				},
 			},
-			hiddenCard: function (player, name) {
+			hiddenCard(player, name) {
 				if (name == 'shan' || name == 'wuxie') return false;
 				if (!lib.inpile.includes(name)) return false;
 				var type = get.type(name);
@@ -2811,14 +2815,14 @@ export const hyyzcards = {
 			ai: {
 				fireAttack: true,
 				respondSha: true,
-				skillTagFilter: function (player) {
+				skillTagFilter(player) {
 					if (!player.countCards('hes', function (card) {
 						if (['meng_taohuasu', 'meng_meihuagao', 'meng_caomeibing', 'meng_chashaobao'].includes(card.name)) return true;
 					})) return false;
 				},
 				order: 10,
 				result: {
-					player: function (player) {
+					player(player) {
 						if (_status.event.dying) return get.attitude(player, _status.event.dying);
 						return 1;
 					},
@@ -3008,13 +3012,13 @@ export const hyyzcards = {
 					filter(event, player) {
 						return player.storage.meng_mengxiang_skill2_hujia && event.card && player.storage.meng_mengxiang_skill2_hujia.includes(event.card) && (event.name != 'damage' || event.notLink());
 					},
-					content() {
+					async content(event, trigger, player) {
 						player.storage.meng_mengxiang_skill2_hujia.remove(trigger.card);
 						if (!player.storage.meng_mengxiang_skill2_hujia.length) player.removeSkill('meng_mengxiang_skill2_hujia');
 					},
 					ai: {
 						nohujia: true,
-						skillTagFilter: function (player, tag, arg) {
+						skillTagFilter(player, tag, arg) {
 							return true;
 						}
 					},
