@@ -109,11 +109,6 @@ declare module 'lib' {
 		 * @param target 目标角色
 		 */
 		chooseDantiao(target: Player): GameEventPromise
-		/**和牌堆拼点
-		 * 劝你别用这个，还不如直接展示两张牌巴拉巴拉
-		 * @param check ai
-		 */
-		pileCompare(check: Function): GameEventPromise
 		/**进行一次座次排布
 		 * 我榻馍莱依拉！
 		 */

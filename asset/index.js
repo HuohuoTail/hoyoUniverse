@@ -5,8 +5,7 @@ import { characters as characters2023, dynamicTranslates as dynamicTranslates202
 import { characters as characters2024, dynamicTranslates as dynamicTranslates2024 } from './character2024.js'
 import { characters as characters2025, dynamicTranslates as dynamicTranslates2025 } from './character2025.js'
 import { characters as characters2026, dynamicTranslates as dynamicTranslates2026 } from './character2026.js'
-import { characters as characters202403, dynamicTranslates as dynamicTranslates202403 } from './character202403.js'
-//import { hyyzcards } from './card.js';
+import { hyyzcards } from './card.js';
 import hyyzvoices from './voices.js';
 //——————————————链接台词对应的语音——————————————//
 for (let characterName in hyyzvoices) {
@@ -15,15 +14,17 @@ for (let characterName in hyyzvoices) {
 }
 
 //——————————————整合武将信息——————————————//
-const allCharacter = { ...characters2023, ...characters2024, ...characters2025, ...characters2026, ...characters202403 }
+const allCharacter = { ...characters2023, ...characters2024, ...characters2025, ...characters2026 }
 //初始化一些常用属性
 const characters = {}, characterTitles = {}, characterIntros = {}, skills = {}, translates = {}, characterSorts = {};
 //依次过滤、筛选、解码导入的信息
-
 /**武将包名 */
 let sortName;
 if (lib.config['extension_忽悠宇宙_type'] == '1') {//按角色来源分类
 	Object.assign(translates, {
+		//
+		hyyzSort_ym: `<img src="${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_ym.png" width="117" height="33">`,//9
+		hyyzSort_ym_info: '粉丝堂',
 		//
 		hyyzSort_b3: `<img src="${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_b3.png" width="117" height="33">`,//9
 		hyyzSort_b3_info: '崩坏三',
@@ -41,6 +42,7 @@ if (lib.config['extension_忽悠宇宙_type'] == '1') {//按角色来源分类
 		hyyzSort_other_info: '其他武将',
 	})
 	Object.assign(characterSorts, {
+		hyyzSort_ym: [],
 		hyyzSort_b3: [],
 		hyyzSort_ys: [],
 		hyyzSort_xt: [],
@@ -48,8 +50,21 @@ if (lib.config['extension_忽悠宇宙_type'] == '1') {//按角色来源分类
 		hyyzSort_other: [],
 	})
 	sortName = function (name) {
-		if (name.startsWith('meng_')) return 'hyyzSort_b3'
+		if (name.startsWith('ym_')) return 'hyyzSort_ym'
 		return 'hyyzSort_' + (['b3', 'ys', 'zzz', 'xt'].includes(name.split('_')[1]) ? name.split('_')[1] : 'other');
+	}
+} else if (lib.config['extension_忽悠宇宙_type'] == '2') {//按设计师分类
+	Object.assign(translates, lib.hyyz.authors)
+	sortName = function (author) {
+		for (let sort in lib.hyyz.authors) {
+			const 作者名 = lib.hyyz.authors[sort]
+			if (作者名 == author) {
+				characterSorts[sort] ??= []
+				return sort
+			}
+		}
+		console.warn('作者名检测出错：', author);
+		return author
 	}
 }
 for (let data in allCharacter) {//键：日期
@@ -59,7 +74,6 @@ for (let data in allCharacter) {//键：日期
 			translates[sortName] = `20${data.slice(0, 2)}.${data.slice(2)}圆梦`;//hyyz_202408: 2024.08圆梦
 			translates[sortName + '_info'] = `20${data.slice(0, 2)}.${data.slice(2, 4)}圆梦，由群赛投票、语音交流评选得到`;//hyyz_202408_info: xxxxxxx
 		}
-		else if (data == '永世乐土') sortName = 'hyyz_2403'//没有info，因为本身是加入到hyyz_2403的
 		else if (data == 'ym') {
 			sortName = 'hyyz_ym'
 			translates[sortName] = `<img src="${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_ym.png" width="76" height="22">`;
@@ -76,8 +90,8 @@ for (let data in allCharacter) {//键：日期
 			//武将标准数组
 			characters[name] = values.find(i => Array.isArray(i));
 			//加入扩展包
-			if (typeof sortName == 'string') characterSorts[sortName].add(name)
-			else characterSorts[sortName(name)].add(name)
+			if (lib.config['extension_忽悠宇宙_type'] == '0') characterSorts[sortName].add(name)
+			else if (lib.config['extension_忽悠宇宙_type'] == '1') characterSorts[sortName(name)].add(name)
 			/**剩余包含三元素的数组 */
 			let temps = values.filter(i => typeof i == 'string');
 			if (!characters[name][4].some(str => str.startsWith('ext:忽悠宇宙'))) characters[name][4].add(`ext:忽悠宇宙/asset/character/image/${name}.jpg`);//导入原画
@@ -94,10 +108,16 @@ for (let data in allCharacter) {//键：日期
 				}
 			}
 			if (temps[1]) {//称号
-				if (temps[1].includes('-')) {
-					characterTitles[name] = `<span class="firetext">${temps[1].split('-')[0]}</span><br><span class="greentext">${temps[1].split('-')[1]}</span>`
+				/**'xxx' \ 'xxxx-xxxx' */
+				const tilte = temps[1]
+				if (tilte.includes('-')) {
+					characterTitles[name] = `<span class="firetext">${tilte.split('-')[0]}</span><br><span class="greentext">${tilte.split('-')[1]}</span>`
+					//加入扩展包
+					if (lib.config['extension_忽悠宇宙_type'] == '2') characterSorts[sortName(tilte.split('-')[1])].add(name)
 				} else {
-					characterTitles[name] = `<span class="greentext">${temps[1]}</span>`;
+					characterTitles[name] = `<span class="greentext">${tilte}</span>`;
+					//加入扩展包
+					if (lib.config['extension_忽悠宇宙_type'] == '2') characterSorts[sortName(tilte.split('-')[0])].add(name)
 				}
 			}
 			if (temps[2]) {//介绍
@@ -128,7 +148,7 @@ for (let data in allCharacter) {//键：日期
 		}
 	}
 }
-//存入库
+//——————————————存入库——————————————//
 Object.assign(lib.hyyz.characters, characters)
 //——————————————导入武将——————————————//
 game.import("character", () => {
@@ -143,7 +163,7 @@ game.import("character", () => {
 		characterSort: { hyyzCharacter: characterSorts },
 		skill: skills,
 		translate: translates,// 
-		dynamicTranslate: { ...dynamicTranslates2023, ...dynamicTranslates2024, ...dynamicTranslates202403, ...dynamicTranslates2025, ...dynamicTranslates2026 },
+		dynamicTranslate: { ...dynamicTranslates2023, ...dynamicTranslates2024, ...dynamicTranslates2025, ...dynamicTranslates2026 },
 		characterSubstitute: {
 			hyyz_ys_furina: [
 				["mengjvxing_achieve", ["ext:忽悠宇宙/other/skin/image/hyyz_ys_furina/mengjvxing_achieve.jpg"]],
@@ -153,17 +173,72 @@ game.import("character", () => {
 				['mengwumeng', ['ext:忽悠宇宙/other/skin/image/hyyz_ys_leidianying/mengwumeng.jpg']],
 				['hyyz_ys_leidianying', ['die:hyyz_ys_leidianying', 'img:hyyz_ys_leidianying']],
 			],
-			meng_caomao: [
-				["meng_caomao_shadow", ["ext:忽悠宇宙/other/skin/image/meng_caomao/meng_caomao_shadow.jpg",]],
-				["meng_caomao_dead", ["ext:忽悠宇宙/other/skin/image/meng_caomao/meng_caomao_dead.jpg",]],
-			],
-			meng_bonisi: [
-				["mengrongyan", ["ext:忽悠宇宙/other/skin/image/meng_bonisi/mengrongyan.jpg",]],
-				["meng_bonisi", ["img:meng_bonisi",]],
+			hyyz_zzz_sb_bonisi: [
+				["mengrongyan", ["ext:忽悠宇宙/other/skin/image/hyyz_zzz_sb_bonisi/mengrongyan.jpg",]],
+				["hyyz_zzz_sb_bonisi", ["img:hyyz_zzz_sb_bonisi",]],
 			],
 		},
 	}
 })
 lib.config.all.characters.splice(3, 0, 'hyyzCharacter');
 lib.translate['hyyzCharacter_character_config'] = `<img src="${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_hyyz.png" width="105.5" height="30">`;
+
+//——————————————自动化异构分包——————————————//
+const characterReplace = {};
+Object.keys(lib.hyyz.characters).forEach(name => {
+	const endName = name.split('_').pop();
+	characterReplace[endName] ??= [];
+	characterReplace[endName].add(name);
+})
+for (let name in characterReplace) if (characterReplace[name].length == 1) delete characterReplace[name]
+/**查找扩展里的同名武将 */
+const sameCharacter = ((names) => [...new Set(names.filter((item, index) => names.indexOf(item) !== index))])(Object.keys(lib.hyyz.characters).map(name => name.split('_').pop()))
+Object.assign(lib.characterReplace, characterReplace)
+
+
+//——————————————整合卡牌信息——————————————//
+const { card, skill, translate, list } = hyyzcards;
+console.log(card, translate);
+//skill、list不需要处理
+for (let cardName in card) {//translate需要添加card里折叠的文字
+	let values = card[cardName];
+	if (Array.isArray(values)) {//hyyz_xxx_info: ['卡牌名', '卡牌描述', '卡牌引文']
+		if (values[0]) translate[cardName.slice(0, cardName.length - 5)] = values[0]//hyyz_xxx
+		if (values[1]) translate[cardName] = values[1]//hyyz_xxx_info
+		if (values[2]) translate[cardName.slice(0, cardName.length - 5) + '_append'] = values[2]//hyyz_xxx_append
+		delete card[cardName]
+	} else if (typeof values == 'object') {//hyyz_xxx: {}
+		values.audio = `ext:忽悠宇宙/asset/card/audio/${cardName}`
+		values.fullskin && (values.image = `ext:忽悠宇宙/asset/card/image/${cardName}.png`);
+		values.fullimage && (values.image = `ext:忽悠宇宙/asset/card/image/${cardName}.jpg`);
+		if (values.type == 'equip' && values.enable) Object.assign(values, {
+			enable: true,
+			selectTarget: -1,
+			filterTarget(card, player, target) {
+				player == target && target.canEquip(card, true)
+			},
+			modTarget: true,
+			allowMultiple: false,
+			content() {
+				//不存在处理区外的牌=全部都在处理区
+				if (!card?.cards.some(card => get.position(card, true) !== "o")) target.equip(card);
+			},
+			toself: true,
+		});
+	}
+}
+//——————————————导入卡牌——————————————//
+game.import('card', () => {
+	/** @type { importCardConfig } */
+	return {
+		name: 'hyyzCard',
+		connect: false,
+		card: card,
+		skill: skill,
+		translate: translate,
+		list: list
+	}
+});
+lib.config.all.cards.splice(2, 0, 'hyyzCard');
+lib.translate['hyyzCard_card_config'] = `<img src="${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_hyyz.png" width="105.5" height="30">`;
 

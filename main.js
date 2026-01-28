@@ -13,7 +13,47 @@ async function PRECONTENT() {
 	//——————————————忽悠宇宙特有存储空间——————————————//
 	lib.hyyz ??= {}
 	Object.assign(lib.hyyz, {
-		ym: {}, prefix: {},
+		authors: {
+			hyyzSort_lige: '紫灵谷的骊歌',
+			hyyzSort_huohuoTail: '尾巴酱',
+			hyyzSort_canghaiyisu: '沧海依酥',
+			hyyzSort_menghai: '梦海离殇',
+			hyyzSort_miealiei: '咩阿栗诶',
+			hyyzSort_youyi: '柚衣',
+			hyyzSort_xiao: '魈',
+			hyyzSort_fushengyi: '浮生亦',
+			hyyzSort_lalalala: '啦啦啦啦',
+			hyyzSort_rijiu: '日玖阳气冲三关',
+			hyyzSort_xilin: '西琳',
+			hyyzSort_weiyu: '微雨',
+			hyyzSort_miao: '埋埋埋埋喵',
+			hyyzSort_lengruohan: '冷若寒',
+			hyyzSort_xinzhi: '心之所向_星之所向',
+			hyyzSort_mushancai: '木善才',
+			hyyzSort_zhouwang: '纣王',
+			hyyzSort_yuezhou: '樾舟',
+			//无自设
+			hyyzSort_feisesu: '绯色愫',
+			hyyzSort_shiyi: '拾壹',
+			hyyzSort_muci: '慕辞',
+			hyyzSort_liuying: '流萤一生推',
+			hyyzSort_qixiyue: '七夕月',
+			hyyzSort_sabalujiang: '萨巴鲁酱',
+			hyyzSort_zuoyeliuying: '昨夜流萤',
+			hyyzSort_qianqiuwanye: '千秋万叶',
+			hyyzSort_huangliangjiu: '黄粱酒温梦',
+			hyyzSort_yishuizhian: '奕水之安',
+			hyyzSort_zhushang: '一般路过の祝商',
+			hyyzSort_huidanglingjueding: '会当凌绝顶喵',
+			hyyzSort_yayiyuanfei: '鸦懿鸢霏',
+			hyyzSort_wuleizhengxin: '五雷正心',
+			hyyzSort_dengjie: '灯姐',
+			hyyzSort_sanqiu: '三秋',
+			hyyzSort_luoyeqiushuang: '落叶秋霜/尾改',
+		},
+		prefix: {
+
+		},
 		//所有武将
 		characters: {},
 		//注释
@@ -52,7 +92,7 @@ async function PRECONTENT() {
 				附魔: "封装概念：为一项事物增加额外效果。<li>属性：新增该附魔词条。<li>牌：牌生效后，执行该附魔词条中的效果。<li>技能或效果：令附魔对象的拥有者/使用者在结算中视为拥有附魔词条中包含的技能或效果。",
 				滞留牌: '封装概念：此刻没有合法目标的手牌（即不能点击的手牌）。',
 				点燃: "封装概念：被点燃的牌使用时无距离和次数限制且不计入次数上限；每回合结束后弃置之。",
-				断拒: "特有概念：背水的反面，不执行任何选项，直接享受效果！<li>这是一个没有任何效果的选项；如果后续因此无法执行，则终止流程。",
+				断拒: "特有概念：背水的反面，不执行任何选项，直接执行后面的效果。<li>可视为一个空白无效果的按钮。",
 				背水: "官方概念：断拒的反面，依次执行前面所有选项！<li>技能中存在多个选项或分支时，执行背水的效果后，再依次执行所有选项的内容。若不能支付代价，无法选择背水选项。",
 				单挑: '特有概念：与一名角色进入其他存活角色离场的单挑模式，默认持续至当前回合结束。',
 
@@ -83,9 +123,9 @@ async function PRECONTENT() {
 			color: 'black',
 			image: 'ext:忽悠宇宙/other/qhly/hyyz_zzz.png'
 		});
-		game.addGroup('hyyz_other', '<span class="hyyzGroup">梦</span>', '圆梦', {
+		game.addGroup('hyyz_ɸ', '<span class="hyyzGroup">梦</span>', '圆梦', {
 			color: '#ee9ac7',
-			image: 'ext:忽悠宇宙/other/qhly/hyyz_other.png'
+			image: 'ext:忽悠宇宙/other/qhly/hyyz_ɸ.png'
 		});
 
 
@@ -359,9 +399,37 @@ async function PRECONTENT() {
 		},
 	};
 
-	//——————————————异构——————————————//
-	Object.assign(lib.characterReplace, {
-	})
+	//——————————————十周年卡牌美化——————————————//
+	if (lib.config.extensions?.includes('十周年UI') && lib.config['extension_十周年UI_enable'] == true) {
+		game.getFileList('extension/十周年UI/image/card-skins/caise', (folders, files) => {
+			[
+				'hyyz_chuochuo.webp', 'hyyz_lingfu.webp', 'hyyz_zisu.webp',
+				//神之键
+				'hyyz_xvkong.webp', 'hyyz_qianjie.webp', 'hyyz_dizui.webp', 'hyyz_weixing.webp', 'hyyz_wanwu.webp', 'hyyz_heiyuan.webp', 'hyyz_baihua.webp', 'hyyz_heiyuanbaihua.webp', 'hyyz_tianhuo1.webp', 'hyyz_tianhuo2.webp', 'hyyz_tianhuo3.webp', 'hyyz_yvdu.webp', 'hyyz_bushi.webp', 'hyyz_xinghai.webp', 'hyyz_xuanyuan.webp', 'hyyz_taixv.webp', 'hyyz_youda.webp', 'hyyz_dizang.webp', 'hyyz_weiba.webp', 'hyyz_zhili.webp',
+
+				'hyyz_qiongguan.webp', 'hyyz_mengxiangyixin.webp', 'hyyz_jiwang.webp',
+				//杀
+				'sha_hyyz_fire.webp', 'sha_hyyz_wind.webp', 'sha_hyyz_ice.webp', 'sha_hyyz_water.webp',
+				'sha_hyyz_imaginary.webp', 'sha_hyyz_quantum.webp', 'sha_hyyz_thunder.webp', 'sha.webp',
+			].forEach((cardName) => {
+				if (!files.includes(cardName)) {
+					game.readFile('extension/忽悠宇宙/other/tenth/' + cardName, (data) => {
+						game.writeFile(data, 'extension/十周年UI/image/card-skins/caise', cardName, () => { });
+					}, (err) => console.error(err));
+				}
+			})
+		})
+		game.getFileList('extension/十周年UI/image/styles/decade', (folders, files) => {
+			['name_hyyz_b3.png', 'name_hyyz_ɸ.png', 'name_hyyz_ys.png', 'name_hyyz_xt.png', 'name_hyyz_zzz.png'].forEach((groupName) => {
+				if (!files.includes(groupName)) {
+					game.readFile('extension/忽悠宇宙/other/tenth/' + groupName, (data) => {
+						game.writeFile(data, 'extension/十周年UI/image/styles/decade', groupName, () => { });
+					}, (err) => console.error(err));
+				}
+			})
+		})
+	}
+
 
 
 	//——————————————详情介绍——————————————//
@@ -469,10 +537,11 @@ const CONFIG = {
 	type: {//分类方式
 		name: '更换扩展包分类',
 		init: '0',
-		intro: '按圆梦时间分类：依据圆梦入扩时间分类；按角色来源分类：大类为游戏名，小类为角色所属区域',
+		intro: '按圆梦时间分类：依据圆梦入扩时间分类；<br>按角色来源分类：大类为游戏名，小类为角色所属区域；<br>按设计师分类：依据不同设计作品分类',
 		item: {
 			'0': '按圆梦时间分类',
 			'1': '按角色来源分类',
+			'2': '按设计师分类',
 		}
 	},
 	huyou: {//忽悠模式
@@ -481,7 +550,7 @@ const CONFIG = {
 		init: true,
 		clear: false,
 		update() {
-			if (lib.config["extension_忽悠宇宙_huyou"] != true && game.filterPlayer2 && current && current.$syncWeakness) game.filterPlayer2((current => {
+			if (lib.config["extension_忽悠宇宙_huyou"] != true && game.filterPlayer2 && lib.element.player.$syncWeakness) game.filterPlayer2((current => {
 				current.$syncWeakness()
 			}))
 		},

@@ -1713,7 +1713,9 @@ export const hyyzBuffx = async function () {//———————————�
 					}
 				}
 			} else {
-				const result = await player.chooseToDiscard('须调整牌至' + event.num, 'h', -change, true).forResult();
+				const result = await player
+					.chooseToDiscard('须调整牌至' + event.num, 'h', -change, true)
+					.forResult();
 				if (result.bool) {
 					event.result = {
 						bool: true,
@@ -1727,6 +1729,121 @@ export const hyyzBuffx = async function () {//———————————�
 			event.trigger('changeCardToAfter')
 		}
 
+		//把num张牌放在牌堆顶/牌堆底（'bottom'）的第No张；返回放置的牌
+		//可以放指定的牌为参数//参考赛飞儿
+		lib.element.player.chooseCardToPile = function (...args) {
+			const next = game.createEvent("chooseCardToPile");
+			next.player = this;
+			if (args.length == 1 && get.is.object(args[0])) {
+				for (const i in args[0][i])
+					next[i] = args[0][i]
+			} else {
+				for (const arg of args) {
+					if (get.itemtype(arg) == 'card') {
+						if (!next.cards) next.cards = [arg]//如果指定了要放的牌
+						next.cards.add(arg)
+					} else if (get.itemtype(arg) == 'cards') {
+						if (!next.cards) next.cards = arg//如果指定了要放的牌
+						next.cards.addArray(arg)
+					} else if (typeof arg == "number") {//数字
+						next.selectCard = [arg, arg];
+					} else if (get.itemtype(arg) == "select") {//两元素数组
+						next.selectCard = arg;
+					} else if (typeof arg == "boolean") {//锁定
+						next.forced = arg;
+					} else if (get.itemtype(arg) == "position") {//区域
+						next.position = arg;
+					} else if (typeof arg == "function") {//条件函数
+						if (next.filterCard) {//卡牌》ai
+							next.ai = arg;
+						} else {
+							next.filterCard = arg;
+						}
+					} else if (typeof arg == "object" && arg) {//对象{type:'basic'}
+						next.filterCard = get.filter(arg);
+					} else if (typeof arg == "string") {//字符串
+						if (arg == 'bottom') next.bottom = true;
+						else get.evtprompt(next, arg);
+					}
+					if (arg === null) {
+						console.log(args);
+					}
+				}
+			}
+			if (next.filterCard == undefined) {
+				next.filterCard = lib.filter.all;
+			}
+			if (next.selectCard == undefined) {
+				next.selectCard = [1, 1];
+			}
+			if (next.position == undefined) {
+				next.position = "h";
+			}
+			if (next.ai == undefined) {
+				next.ai = get.unuseful;
+			}
+			if (next.No == undefined) {
+				next.No = 1;
+			}
+			if (next.cards == undefined) {//如果指定了要放的牌
+				next.cards = []
+			}
+			next.setContent("chooseCardToPile");
+			next._args = args;
+			return next;
+		}
+		lib.element.content.chooseCardToPile = async function (event, trigger, player) {
+			event.result = {
+				bool: true,
+				cards: [],
+			};
+			let cards = [];
+			if (event.cards.length > 0) {
+				cards = event.cards;
+			} else {
+				let str = '';
+				if (event.selectCard.length == 2) {
+					if (player.countCards(event.position) < event.selectCard[0]) {
+						console.log(player, '执行chooseCardToPile时' + event.position + '区域的牌不足' + event.selectCard[0]);
+						event.finish();
+						return;
+					}
+					if (event.selectCard[1] == event.selectCard[0]) str = get.strNumber(event.selectCard[0])
+					if (event.selectCard[1] > event.selectCard[0])
+						str = (
+							event.selectCard[0] > 1 ? `${get.strNumber(event.selectCard[0])}至` : '至多'
+						) + get.strNumber(event.selectCard[1])
+				}
+				if (!event.prompt) event.prompt = `将${str}张牌置于牌堆${event.bottom == true ? '底' : '顶'}${event.No == 1 ? '' : '第' + event.No + '张'}（先选择的在上）`;
+				cards = await player.chooseCard(event.position, event.selectCard, event.filterCard, event.ai, event.forced)
+					.set('prompt', event.prompt).set('prompt2', event.prompt2)
+					.forResultCards();
+			}
+			if (cards) {
+				event.result.cards = cards;
+				if (cards.some(i => get.owner(i) == player)) await player.lose(cards.filter(i => get.owner(i) == player), ui.cardPile);
+				if (event.bottom == true) {
+					for (let i = 0; i < cards.length; i++) {
+						const card = cards[i];
+						card.fix();
+						ui.cardPile.insertBefore(card, ui.cardPile.children[ui.cardPile.childNodes.length - event.No + 1])
+					}
+					game.log(player, "将", cards, "置于了牌堆底", event.No == 1 ? '' : '第' + event.No + '张');
+				} else {
+					cards.reverse();
+					if (cards.some(i => get.owner(i) == player)) await player.lose(cards.filter(i => get.owner(i) == player), ui.cardPile);
+					for (let i = 0; i < cards.length; i++) {
+						const card = cards[i];
+						card.fix();
+						ui.cardPile.appendChild(card);
+						ui.cardPile.insertBefore(card, ui.cardPile.children[event.No - 1]);
+					}
+					//在弃牌堆
+					//await game.cardsGotoPile(cards, "insert");
+					game.log(player, "将", cards, "置于了牌堆顶", event.No == 1 ? '' : '第' + event.No + '张');
+				}
+			}
+		}
 
 		/**获取若干有花色有点数的影（未启用）
 		 * @param {number} count 数量
@@ -1752,7 +1869,7 @@ export const hyyzBuffx = async function () {//———————————�
 		}
 		lib.element.content.chooseToSwapSeat = async function (event, trigger, player) {
 			//while (true) {
-			//	const targets = await player.chooseTarget("选择两名角色交换位置", 2).forResultTargets();
+			//	const {targets} = await player.chooseTarget("选择两名角色交换位置", 2).forResult();
 			//	if (!targets) break;
 			//	game.swapSeat(targets[0], targets[1], null, null, true);
 			//}

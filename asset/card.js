@@ -295,7 +295,7 @@ export const hyyzcards = {
 				const map = Object.assign({}, lib.card.hyyz_zisu.controlMap), target = event.target;
 				//第一步：类型
 				const list1 = Object.keys(map);
-				const { control1 } = await target.chooseControl(list1)
+				const { control: control1 } = await target.chooseControl(list1)
 					.set('list1', list1)
 					.set('prompt', '自塑尘脂')
 					.set('prompt2', '一、选择定向牌的类型')
@@ -325,7 +325,7 @@ export const hyyzcards = {
 				if (!control1 || control1 == 'cancel2') return;
 				//第二步：描述
 				const list2 = map[control1];
-				const { control2 } = await target.chooseControl(list2)
+				const { control: control2 } = await target.chooseControl(list2)
 					.set('list2', list2).set('control1', control1)
 					.set('prompt', '自塑尘脂')
 					.set('prompt2', '二、选择描述包含的词语')
@@ -1335,12 +1335,12 @@ export const hyyzcards = {
 			},
 		},
 		//meng
-		meng_taohuasu_info: [`桃花酥`, `你可以将此牌当做一张带有“回复”描述的牌使用或打出。`, ``],
-		meng_taohuasu: {
+		hyyz_taohuasu_info: [`桃花酥`, `你可以将此牌当做一张带有“回复”描述的牌使用或打出。`, ``],
+		hyyz_taohuasu: {
 			fullimage: true,
 			cardcolor: "red",
 			type: "basic",
-			global: "mengLife_skill",
+			global: "hyyzLife_skill",
 			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
@@ -1356,12 +1356,12 @@ export const hyyzcards = {
 				},
 			},
 		},
-		meng_meihuagao_info: [`梅花糕`, `你可以将此牌当做一张带有“弃置”描述的牌使用或打出。`, ``],
-		meng_meihuagao: {
+		hyyz_meihuagao_info: [`梅花糕`, `你可以将此牌当做一张带有“弃置”描述的牌使用或打出。`, ``],
+		hyyz_meihuagao: {
 			fullimage: true,
 			cardcolor: "black",
 			type: "basic",
-			global: "mengLife_skill",
+			global: "hyyzLife_skill",
 			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
@@ -1377,12 +1377,12 @@ export const hyyzcards = {
 				},
 			},
 		},
-		meng_caomeibing_info: [`草莓饼`, `你可以将此牌当做一张带有“获得”描述的牌使用或打出。`, ``],
-		meng_caomeibing: {
+		hyyz_caomeibing_info: [`草莓饼`, `你可以将此牌当做一张带有“获得”描述的牌使用或打出。`, ``],
+		hyyz_caomeibing: {
 			fullimage: true,
 			cardcolor: "red",
 			type: "basic",
-			global: "mengLife_skill",
+			global: "hyyzLife_skill",
 			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
@@ -1398,12 +1398,12 @@ export const hyyzcards = {
 				},
 			},
 		},
-		meng_chashaobao_info: [`叉烧包`, `你可以将此牌当做一张带有“伤害”描述的牌使用或打出。`, ``],
-		meng_chashaobao: {
+		hyyz_chashaobao_info: [`叉烧包`, `你可以将此牌当做一张带有“伤害”描述的牌使用或打出。`, ``],
+		hyyz_chashaobao: {
 			fullimage: true,
 			cardcolor: "black",
 			type: "basic",
-			global: "mengLife_skill",
+			global: "hyyzLife_skill",
 			derivation: "hyyz_xt_sp_ruanmei",
 			ai: {
 				basic: {
@@ -1419,8 +1419,8 @@ export const hyyzcards = {
 				},
 			},
 		},
-		meng_jiwang_info: ['继往开来', '出牌阶段，对包含你自己在内的一名角色使用。目标角色选择一项：①弃置所有手牌，然后摸等量的牌。②将所有手牌当做一张不为【继往开来】的普通锦囊牌使用。'],
-		meng_jiwang: {
+		hyyz_jiwang_info: ['继往开来', '出牌阶段，对包含你自己在内的一名角色使用。目标角色选择一项：①弃置所有手牌，然后摸等量的牌。②将所有手牌当做一张不为【继往开来】的普通锦囊牌使用。'],
+		hyyz_jiwang: {
 			fullskin: true,
 			type: "trick",
 			enable(card, player) {
@@ -1432,7 +1432,7 @@ export const hyyzcards = {
 					discard = true;
 				for (var i of hs) {
 					if (use && !game.checkMod(i, player, "unchanged", "cardEnabled2", player)) use = false;
-					if (discard && !lib.filter.cardDiscardable(i, player, "meng_jiwang")) discard = false;
+					if (discard && !lib.filter.cardDiscardable(i, player, "hyyz_jiwang")) discard = false;
 					if (!use && !discard) return false;
 				}
 				return true;
@@ -1451,7 +1451,7 @@ export const hyyzcards = {
 						discard = true;
 					for (var i of hs) {
 						if (use && !game.checkMod(i, player, "unchanged", "cardEnabled2", player)) use = false;
-						if (discard && !lib.filter.cardDiscardable(i, player, "meng_jiwang")) discard = false;
+						if (discard && !lib.filter.cardDiscardable(i, player, "hyyz_jiwang")) discard = false;
 						if (!use && !discard) break;
 					}
 					if (use && discard)
@@ -1476,7 +1476,7 @@ export const hyyzcards = {
 				} else {
 					var list = [];
 					for (var i of lib.inpile) {
-						if (i != "meng_jiwang" && get.type(i) == "trick" && lib.filter.filterCard({ name: i, cards: cards }, player)) list.push(["锦囊", "", i]);
+						if (i != "hyyz_jiwang" && get.type(i) == "trick" && lib.filter.filterCard({ name: i, cards: cards }, player)) list.push(["锦囊", "", i]);
 					}
 					if (list.length) {
 						player.chooseButton(["继往开来：选择要使用的牌", [list, "vcard"]], true).set("ai", function (button) {
@@ -1514,193 +1514,14 @@ export const hyyzcards = {
 				},
 			},
 		},
-		meng_shuangxiang_info: ['双相药物', '出牌阶段，对你使用，目标回复一点体力，并使场上所有角色本回合所有的转换技失效。',],
-		meng_shuangxiang: {
-			fullskin: true,
-			type: "basic",
-			cardcolor: "red",
-			toself: true,
-			enable(card, player) {
-				return player.hp < player.maxHp;
-			},
-			selectTarget: -1,
-			filterTarget(card, player, target) {
-				return target == player && target.hp < target.maxHp;
-			},
-			modTarget(card, player, target) {
-				return target.hp < target.maxHp;
-			},
-			async content(event, trigger, player) {
-				await event.targets[0].recover();
-
-				for (let current of game.filterPlayer()) {
-					const skills = current.getStockSkills("仲村由理", "天下第一").filter(function (skill) {
-						var info = get.info(skill);
-						if (!info || info.hiddenSkill || info.zhuSkill || info.charlotte) return false;
-						return info.zhuanhuanji || info.zhuanhuanLimit || lib.translate[skill + '_info']?.includes('转换');
-					});
-					if (skills.length) current.addTempSkill('meng_shuangxiang_skill');
-				}
-			},
-			ai: {
-				basic: {
-					order: (card, player) => {
-						if (player.hasSkillTag("pretao")) return 9;
-						return 2;
-					},
-					useful: (card, i) => {
-						let player = _status.event.player;
-						if (!game.checkMod(card, player, "unchanged", "cardEnabled2", player)) return 2 / (1 + i);
-						let fs = game.filterPlayer(current => {
-							return get.attitude(player, current) > 0 && current.hp <= 2;
-						}),
-							damaged = 0,
-							needs = 0;
-						fs.forEach(f => {
-							if (f.hp > 3 || !lib.filter.cardSavable(card, player, f)) return;
-							if (f.hp > 1) damaged++;
-							else needs++;
-						});
-						if (needs && damaged) return 5 * needs + 3 * damaged;
-						if (needs + damaged > 1 || player.hasSkillTag("maixie")) return 8;
-						if (player.hp / player.maxHp < 0.7) return 7 + Math.abs(player.hp / player.maxHp - 0.5);
-						if (needs) return 7;
-						if (damaged) return Math.max(3, 7.8 - i);
-						return Math.max(1, 7.2 - i);
-					},
-					value: (card, player) => {
-						let fs = game.filterPlayer(current => {
-							return get.attitude(_status.event.player, current) > 0;
-						}),
-							damaged = 0,
-							needs = 0;
-						fs.forEach(f => {
-							if (!player.canUse("tao", f)) return;
-							if (f.hp <= 1) needs++;
-							else if (f.hp == 2) damaged++;
-						});
-						if ((needs && damaged) || player.hasSkillTag("maixie")) return Math.max(9, 5 * needs + 3 * damaged);
-						if (needs || damaged > 1) return 8;
-						if (damaged) return 7.5;
-						return Math.max(5, 9.2 - player.hp);
-					},
-				},
-				result: {
-					target: (player, target) => {
-						if (target.hasSkillTag("maixie")) return 3;
-						return 2;
-					},
-					"target_use": (player, target, card) => {
-						let mode = get.mode(),
-							taos = player.getCards("hs", i => get.name(i) === "tao" && lib.filter.cardEnabled(i, target, "forceEnable"));
-						if (target !== _status.event.dying) {
-							if (
-								!player.isPhaseUsing() ||
-								player.needsToDiscard(0, (i, player) => {
-									return !player.canIgnoreHandcard(i) && taos.includes(i);
-								}) ||
-								player.hasSkillTag(
-									"nokeep",
-									true,
-									{
-										card: card,
-										target: target,
-									},
-									true
-								)
-							)
-								return 2;
-							let min = 8.1 - (4.5 * player.hp) / player.maxHp,
-								nd = player.needsToDiscard(0, (i, player) => {
-									return !player.canIgnoreHandcard(i) && (taos.includes(i) || get.value(i) >= min);
-								}),
-								keep = nd ? 0 : 2;
-							if (nd > 2 || (taos.length > 1 && (nd > 1 || (nd && player.hp < 1 + taos.length))) || (target.identity === "zhu" && (nd || target.hp < 3) && (mode === "identity" || mode === "versus" || mode === "chess")) || !player.hasFriend()) return 2;
-							if (
-								game.hasPlayer(current => {
-									return player !== current && current.identity === "zhu" && current.hp < 3 && (mode === "identity" || mode === "versus" || mode === "chess") && get.attitude(player, current) > 0;
-								})
-							)
-								keep = 3;
-							else if (nd === 2 || player.hp < 2) return 2;
-							if (nd === 2 && player.hp <= 1) return 2;
-							if (keep === 3) return 0;
-							if (taos.length <= player.hp / 2) keep = 1;
-							if (
-								keep &&
-								game.countPlayer(current => {
-									if (player !== current && current.hp < 3 && player.hp > current.hp && get.attitude(player, current) > 2) {
-										keep += player.hp - current.hp;
-										return true;
-									}
-									return false;
-								})
-							) {
-								if (keep > 2) return 0;
-							}
-							return 2;
-						}
-						if (target.isZhu2() || target === game.boss) return 2;
-						if (player !== target) {
-							if (target.hp < 0 && taos.length + target.hp <= 0) return 0;
-							if (Math.abs(get.attitude(player, target)) < 1) return 0;
-						}
-						if (!player.getFriends().length) return 2;
-						let tri = _status.event.getTrigger(),
-							num = game.countPlayer(current => {
-								if (get.attitude(current, target) > 0) return current.countCards("hs", i => get.name(i) === "tao" && lib.filter.cardEnabled(i, target, "forceEnable"));
-							}),
-							dis = 1,
-							t = _status.currentPhase || game.me;
-						while (t !== target) {
-							let att = get.attitude(player, t);
-							if (att < -2) dis++;
-							else if (att < 1) dis += 0.45;
-							t = t.next;
-						}
-						if (mode === "identity") {
-							if (tri && tri.name === "dying") {
-								if (target.identity === "fan") {
-									if ((!tri.source && player !== target) || (tri.source && tri.source !== target && player.getFriends().includes(tri.source.identity))) {
-										if (num > dis || (player === target && player.countCards("hs", { type: "basic" }) > 1.6 * dis)) return 2;
-										return 0;
-									}
-								} else if (tri.source && tri.source.isZhu && (target.identity === "zhong" || target.identity === "mingzhong") && (tri.source.countCards("he") > 2 || (player === tri.source && player.hasCard(i => i.name !== "tao", "he")))) return 2;
-								//if(player!==target&&!target.isZhu&&target.countCards('hs')<dis) return 0;
-							}
-							if (player.identity === "zhu") {
-								if (
-									player.hp <= 1 &&
-									player !== target &&
-									taos + player.countCards("hs", "jiu") <=
-									Math.min(
-										dis,
-										game.countPlayer(current => {
-											return current.identity === "fan";
-										})
-									)
-								)
-									return 0;
-							}
-						} else if (mode === "stone" && target.isMin() && player !== target && tri && tri.name === "dying" && player.side === target.side && tri.source !== target.getEnemy()) return 0;
-						return 2;
-					},
-				},
-				tag: {
-					recover: 1,
-					save: 1,
-				},
-			},
-
-		},
-		meng_mengxiang_info: ["梦想一心", "每回合限一次，你可以改变一种装备栏的废除状态，视为使用或打出一张雷【杀】。<br>你对唯一目标使用【杀】时，若你没有<span class=\"thundertext\" style=\"font-family: yuanli\">护甲/防具/非锁定技/手牌</span>，目标角色的对应元素失效。"],
-		meng_mengxiang: {//5/5
+		hyyz_mengxiangyixin_info: ["梦想一心", "每回合限一次，你可以改变一种装备栏的废除状态，视为使用或打出一张雷【杀】。<br>你对唯一目标使用【杀】时，若你没有<span class=\"thundertext\" style=\"font-family: yuanli\">护甲/防具/非锁定技/手牌</span>，目标角色的对应元素失效。"],
+		hyyz_mengxiangyixin: {//5/5
 			legend: true,
 			fullskin: true,
 			derivation: 'hyyz_ys_leidianying',
 			type: "equip",
 			subtype: "equip1",
-			skills: ["meng_mengxiang_skill1", "meng_mengxiang_skill2"],
+			skills: ["hyyz_mengxiangyixin_skill1", "hyyz_mengxiangyixin_skill2"],
 			distance: {
 				attackFrom: -2,
 			},
@@ -2518,7 +2339,7 @@ export const hyyzcards = {
 						if (fellow.hasUseTarget(card)) await fellow.chooseUseTarget(card);
 					}
 				} else {
-					lib.character.hyyz_dizang_character = ['none', 'hyyz_other', 2, ['hyyzwuming'], ['ext:忽悠宇宙/asset/hyyzCard/image/hyyz_dizang_character.jpg']]
+					lib.character.hyyz_dizang_character = ['none', 'hyyz_ɸ', 2, ['hyyzwuming'], ['ext:忽悠宇宙/asset/hyyzCard/image/hyyz_dizang_character.jpg']]
 					lib.translate.hyyz_dizang_character = '地藏御魂';
 					lib.characterTitle.hyyz_dizang_character = '#r地藏御魂的鬼神'
 					const { fellow } = await player
@@ -2695,15 +2516,14 @@ export const hyyzcards = {
 			},
 			"_priority": 600,
 		},
-		//meng
-
-		mengLife_skill: {
+		//生命牌
+		hyyzLife_skill: {
 			enable: ["chooseToUse", "chooseToRespond"],
 			filter(event, player) {
 				if (event.filterCard({ name: 'wuxie' }, player, event) ||
 					event.filterCard({ name: 'shan' }, player, event)) return false;
 				if (player.countCards('hes', function (card) {
-					if (['meng_taohuasu', 'meng_meihuagao', 'meng_caomeibing', 'meng_chashaobao'].includes(card.name)) return true;
+					if (['hyyz_taohuasu', 'hyyz_meihuagao', 'hyyz_caomeibing', 'hyyz_chashaobao'].includes(card.name)) return true;
 				})) {
 					for (var i of lib.inpile) {
 						var type = get.type2(i);
@@ -2715,17 +2535,17 @@ export const hyyzcards = {
 			chooseButton: {
 				dialog(event, player) {
 					var map = {
-						'meng_taohuasu': false,//红桃 回复
-						'meng_meihuagao': false,//梅花 弃置
-						'meng_caomeibing': false,//方块 获得
-						'meng_chashaobao': false,//黑桃 伤害
+						'hyyz_taohuasu': false,//红桃 回复
+						'hyyz_meihuagao': false,//梅花 弃置
+						'hyyz_caomeibing': false,//方块 获得
+						'hyyz_chashaobao': false,//黑桃 伤害
 					};
 					for (var i of player.getCards('hes')) if (map[i.name] != undefined) map[i.name] = true;
 					var dialog = ui.create.dialog('生命牌', 'hidden');
 					var list1 = [], list2 = [], list3 = [], list4 = [];
 					for (var name of lib.inpile) {
 						if (!event.filterCard({ name: name }, player, event)) continue;
-						if (['meng_taohuasu', 'meng_meihuagao', 'meng_caomeibing', 'meng_chashaobao'].includes(name)) continue;
+						if (['hyyz_taohuasu', 'hyyz_meihuagao', 'hyyz_caomeibing', 'hyyz_chashaobao'].includes(name)) continue;
 						var type = get.type(name);
 						if (type == 'delay' || type == 'equip') continue;
 						var info = lib.translate[name + '_info'];
@@ -2750,19 +2570,19 @@ export const hyyzcards = {
 							};
 						};
 					};
-					if (map['meng_taohuasu'] && list1.length > 0) {
+					if (map['hyyz_taohuasu'] && list1.length > 0) {
 						dialog.addText('桃花酥（回复）');
 						dialog.addSmall([list1, 'vcard']);
 					};
-					if (map['meng_meihuagao'] && list2.length > 0) {
+					if (map['hyyz_meihuagao'] && list2.length > 0) {
 						dialog.addText('梅花糕（弃置）');
 						dialog.addSmall([list2, 'vcard']);
 					};
-					if (map['meng_caomeibing'] && list3.length > 0) {
+					if (map['hyyz_caomeibing'] && list3.length > 0) {
 						dialog.addText('草莓饼（获得）');
 						dialog.addSmall([list3, 'vcard']);
 					};
-					if (map['meng_chashaobao'] && list4.length > 0) {
+					if (map['hyyz_chashaobao'] && list4.length > 0) {
 						dialog.addText('叉烧包（伤害）');
 						dialog.addSmall([list4, 'vcard']);
 					};
@@ -2783,10 +2603,10 @@ export const hyyzcards = {
 					var life_info = lib.translate[life + '_info'];
 					return {
 						filterCard(card) {
-							if (life_info.indexOf('回复') != -1 && get.name(card) == 'meng_taohuasu') return true;
-							if (life_info.indexOf('弃置') != -1 && get.name(card) == 'meng_meihuagao') return true;
-							if (life_info.indexOf('获得') != -1 && get.name(card) == 'meng_caomeibing') return true;
-							if (life_info.indexOf('伤害') != -1 && get.name(card) == 'meng_chashaobao') return true;
+							if (life_info.indexOf('回复') != -1 && get.name(card) == 'hyyz_taohuasu') return true;
+							if (life_info.indexOf('弃置') != -1 && get.name(card) == 'hyyz_meihuagao') return true;
+							if (life_info.indexOf('获得') != -1 && get.name(card) == 'hyyz_caomeibing') return true;
+							if (life_info.indexOf('伤害') != -1 && get.name(card) == 'hyyz_chashaobao') return true;
 							return false;
 						},
 						popname: true,
@@ -2809,7 +2629,7 @@ export const hyyzcards = {
 				if (!lib.inpile.includes(name)) return false;
 				var type = get.type(name);
 				if (player.countCards('hes', function (card) {
-					if (['meng_taohuasu', 'meng_meihuagao', 'meng_caomeibing', 'meng_chashaobao'].includes(card.name)) return true;
+					if (['hyyz_taohuasu', 'hyyz_meihuagao', 'hyyz_caomeibing', 'hyyz_chashaobao'].includes(card.name)) return true;
 				})) return (type == 'basic' || type == 'trick');
 			},
 			ai: {
@@ -2817,7 +2637,7 @@ export const hyyzcards = {
 				respondSha: true,
 				skillTagFilter(player) {
 					if (!player.countCards('hes', function (card) {
-						if (['meng_taohuasu', 'meng_meihuagao', 'meng_caomeibing', 'meng_chashaobao'].includes(card.name)) return true;
+						if (['hyyz_taohuasu', 'hyyz_meihuagao', 'hyyz_caomeibing', 'hyyz_chashaobao'].includes(card.name)) return true;
 					})) return false;
 				},
 				order: 10,
@@ -2829,44 +2649,12 @@ export const hyyzcards = {
 				},
 			},
 		},
-		meng_shuangxiang_skill: {
-			init(player, skill) {
-				player.addSkillBlocker(skill);
-				let list = player.getSkills(null, false, false).filter((i) => {
-					return lib.skill.meng_shuangxiang_skill.skillBlocker(i, player);
-				});
-				if (list.length) {
-					player.addTip(skill, "转换技失效");
-					player.markSkill(skill)
-				}
-			},
-			onremove(player, skill) {
-				player.removeSkillBlocker(skill);
-				player.removeTip(skill);
-			},
-			charlotte: true,
-			skillBlocker(skill, player) {
-				if (player.storage.ymshuguang) return false;
-				const info = get.info(skill);
-				if (info.persevereSkill || info.charlotte) return false;
-				return info.zhuanhuanji || info.zhuanhuanLimit || lib.translate[skill + '_info']?.includes('转换');
-			},
-			intro: {
-				content(storage, player, skill) {
-					let list = player.getSkills(null, false, false).filter((i) => {
-						return lib.skill.meng_shuangxiang_skill.skillBlocker(i, player);
-					});
-					if (list.length) return "失效技能：" + get.translation(list);
-					return "无失效技能";
-				},
-			},
-		},
 		//梦想
-		meng_mengxiang_skill1: {
+		hyyz_mengxiangyixin_skill1: {
 			equipSkill: true,
 			enable: ["chooseToUse", "chooseToRespond"],
 			filter(event, player) {
-				if (player.hasHistory('useSkill', (evt) => evt.skill == 'meng_mengxiang_skill1')) return false;
+				if (player.hasHistory('useSkill', (evt) => evt.skill == 'hyyz_mengxiangyixin_skill1')) return false;
 				return event.filterCard({ name: 'sha', isCard: true }, player, event);
 			},
 			chooseButton: {
@@ -2916,8 +2704,8 @@ export const hyyzcards = {
 						},
 						popname: true,
 						async precontent(event, trigger, player) {
-							player.logSkill('meng_mengxiang_skill1');
-							const equip = event.result.equip || lib.skill.meng_mengxiang_skill1_backup.equip;
+							player.logSkill('hyyz_mengxiangyixin_skill1');
+							const equip = event.result.equip || lib.skill.hyyz_mengxiangyixin_skill1_backup.equip;
 							if (player.hasDisabledSlot(equip)) player.enableEquip(equip);
 							else player.disableEquip(equip);
 							delete event.result.skill;
@@ -2939,7 +2727,7 @@ export const hyyzcards = {
 				},
 			},
 		},
-		meng_mengxiang_skill2: {
+		hyyz_mengxiangyixin_skill2: {
 			equipSkill: true,
 			trigger: {
 				player: "useCard",
@@ -2962,24 +2750,24 @@ export const hyyzcards = {
 				}
 				if (!player.hujia) {
 					str += '<li><span class="firetext">护甲</span>失效';
-					target.addTempSkill('meng_mengxiang_skill2_hujia');
-					target.storage.meng_mengxiang_skill2_hujia.add(trigger.card);
-					target.markSkill('meng_mengxiang_skill2_hujia');
+					target.addTempSkill('hyyz_mengxiangyixin_skill2_hujia');
+					target.storage.hyyz_mengxiangyixin_skill2_hujia.add(trigger.card);
+					target.markSkill('hyyz_mengxiangyixin_skill2_hujia');
 				}
 				if (!player.getEquip(2)) {
 					str += '<li><span class="firetext">防具</span>失效';
-					target.addTempSkill('meng_mengxiang_skill2_fangjv');
-					target.storage.meng_mengxiang_skill2_fangjv.add(trigger.card);
-					target.markSkill('meng_mengxiang_skill2_fangjv');
+					target.addTempSkill('hyyz_mengxiangyixin_skill2_fangjv');
+					target.storage.hyyz_mengxiangyixin_skill2_fangjv.add(trigger.card);
+					target.markSkill('hyyz_mengxiangyixin_skill2_fangjv');
 				}
 				let skills = player.getSkills(null, false, false).filter(function (skill) {
 					return !lib.skill[skill].charlotte && !get.is.locked(skill, player);
 				});
 				if (!skills.length) {
 					game.log('<li><span class="firetext">非锁定技</span>失效');
-					target.addTempSkill('meng_mengxiang_skill2_skill');
-					target.storage.meng_mengxiang_skill2_skill.add(trigger.card);
-					target.markSkill('meng_mengxiang_skill2_skill');
+					target.addTempSkill('hyyz_mengxiangyixin_skill2_skill');
+					target.storage.hyyz_mengxiangyixin_skill2_skill.add(trigger.card);
+					target.markSkill('hyyz_mengxiangyixin_skill2_skill');
 				}
 				game.log('#g【梦想一心】', str);
 			},
@@ -3010,11 +2798,11 @@ export const hyyzcards = {
 					charlotte: true,
 					firstDo: true,
 					filter(event, player) {
-						return player.storage.meng_mengxiang_skill2_hujia && event.card && player.storage.meng_mengxiang_skill2_hujia.includes(event.card) && (event.name != 'damage' || event.notLink());
+						return player.storage.hyyz_mengxiangyixin_skill2_hujia && event.card && player.storage.hyyz_mengxiangyixin_skill2_hujia.includes(event.card) && (event.name != 'damage' || event.notLink());
 					},
 					async content(event, trigger, player) {
-						player.storage.meng_mengxiang_skill2_hujia.remove(trigger.card);
-						if (!player.storage.meng_mengxiang_skill2_hujia.length) player.removeSkill('meng_mengxiang_skill2_hujia');
+						player.storage.hyyz_mengxiangyixin_skill2_hujia.remove(trigger.card);
+						if (!player.storage.hyyz_mengxiangyixin_skill2_hujia.length) player.removeSkill('hyyz_mengxiangyixin_skill2_hujia');
 					},
 					ai: {
 						nohujia: true,
@@ -3047,11 +2835,11 @@ export const hyyzcards = {
 					charlotte: true,
 					firstDo: true,
 					filter(event, player) {
-						return player.storage.meng_mengxiang_skill2_fangjv && event.card && player.storage.meng_mengxiang_skill2_fangjv.includes(event.card) && (event.name != 'damage' || event.notLink());
+						return player.storage.hyyz_mengxiangyixin_skill2_fangjv && event.card && player.storage.hyyz_mengxiangyixin_skill2_fangjv.includes(event.card) && (event.name != 'damage' || event.notLink());
 					},
 					content() {
-						player.storage.meng_mengxiang_skill2_fangjv.remove(trigger.card);
-						if (!player.storage.meng_mengxiang_skill2_fangjv.length) player.removeSkill('meng_mengxiang_skill2_fangjv');
+						player.storage.hyyz_mengxiangyixin_skill2_fangjv.remove(trigger.card);
+						if (!player.storage.hyyz_mengxiangyixin_skill2_fangjv.length) player.removeSkill('hyyz_mengxiangyixin_skill2_fangjv');
 					},
 					ai: {
 						"unequip2": true,
@@ -3076,7 +2864,7 @@ export const hyyzcards = {
 						name: "无想の一刀",
 						content(storage, player, skill) {
 							var list = player.getSkills(null, false, false).filter(function (i) {
-								return lib.skill.meng_mengxiang_skill2_skill.skillBlocker(i, player);
+								return lib.skill.hyyz_mengxiangyixin_skill2_skill.skillBlocker(i, player);
 							});
 							if (list.length) return '失效技能：' + get.translation(list);
 							return '无失效技能';
@@ -3095,11 +2883,11 @@ export const hyyzcards = {
 					popup: false,
 					priority: 12,
 					filter(event, player) {
-						return player.storage.meng_mengxiang_skill2_skill && event.card && player.storage.meng_mengxiang_skill2_skill.includes(event.card) && (event.name != 'damage' || event.notLink());
+						return player.storage.hyyz_mengxiangyixin_skill2_skill && event.card && player.storage.hyyz_mengxiangyixin_skill2_skill.includes(event.card) && (event.name != 'damage' || event.notLink());
 					},
 					content() {
-						player.storage.meng_mengxiang_skill2_skill.remove(trigger.card);
-						if (!player.storage.meng_mengxiang_skill2_skill.length) player.removeSkill('meng_mengxiang_skill2_skill');
+						player.storage.hyyz_mengxiangyixin_skill2_skill.remove(trigger.card);
+						if (!player.storage.hyyz_mengxiangyixin_skill2_skill.length) player.removeSkill('hyyz_mengxiangyixin_skill2_skill');
 					},
 					"_priority": 1201,
 				},
@@ -3127,10 +2915,9 @@ export const hyyzcards = {
 		visible_hyyz_qiongguan: '预',
 
 		//meng
-		mengLife_skill: "生命",
-		meng_shuangxiang_skill: '双相药物',
-		meng_mengxiang_skill1: "梦想真说",
-		meng_mengxiang_skill2: "无限の一刀",
+		hyyzLife_skill: "生命",
+		hyyz_mengxiangyixin_skill1: "梦想真说",
+		hyyz_mengxiangyixin_skill2: "无限の一刀",
 	},
 	list: [
 		//量子杀*5（黑桃） 虚数杀*5（黑桃1红桃3方块1） 风蚀杀*5（梅花）

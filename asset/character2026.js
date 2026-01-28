@@ -3,9 +3,139 @@ import { lib, game, ui, get, ai, _status } from '../../../noname.js';
 //技能等相关信息
 /**@type { SMap < SMap< [String, Character, String, String] | Skill | String>> } */
 const characters = {
+	2601: {
+		hyyz_xt_sp_jingliu: ['镜流', ['female', 'hyyz_xt', 4, ['mengmysfeiguang'], []], '习自微雨的李素裳'],
+		mengmysfeiguang: {
+			enable: 'phaseUse',
+			usable: 2,
+			filter(event, player) {
+				return player.countCards('h') != player.hp
+			},
+			async content(event, trigger, player) {
+				const result = await player.changeCardTo(player.hp).forResult();
+				let cards;
+				if (result.bool) {
+					if (result.type == 'draw' && result.cards.some(i => i.name == 'sha')) {
+						cards = result.cards.filter(i => i.name == 'sha' && player.getCards('he').includes(i))
+					}
+					if (result.type == 'chooseToDiscard' && result.cards.some(i => lib.translate[i.name]?.includes('剑'))) {
+						cards = result.cards.filter(i => lib.translate[i.name]?.includes('剑') && get.position(i) == 'd')
+					}
+				}
+				if (cards) {
+					const card = get.autoViewAs({ name: 'sha', nature: 'ice' }, cards);
+					await player.chooseUseTarget(card, cards, true, false);
+				}
+			},
+			ai: {
+				order: 1,
+			}
+		},
+		mengmysfeiguang_info: '飞光|出牌阶段限两次，你可以调整手牌至体力值，若因此得到含“杀”牌或弃置含“剑”牌，将之当无距离次数限制的冰【杀】使用。',
+
+		hyyz_b3_re_hua: ['华', ['female', 'hyyz_b3', 3, ['hyyzb3recunjin', 'hyyzb3refusheng'], []], '尾巴酱', '融汇自骊歌和冷若寒的华'],
+		hyyzb3recunjin: {
+			audio: 'hyyzcunjin',
+			trigger: {
+				player: ['useCardAfter', 'loseAfter', 'gainAfter'],
+			},
+			filter(event, player) {
+				switch (event.name) {
+					case 'useCard': return player.countDiscardableCards(player, 'he') > 0;
+					case 'lose': return event.type == 'discard';
+					case 'gain': return player.countCards('hs', (i) => player.hasUseTarget(i)) > 0;
+				}
+			},
+			lastDo: true,
+			direct: true,
+			frequent: true,
+			async content(event, trigger, player) {
+				switch (trigger.name) {
+					case 'useCard': {
+						player.chooseToDiscard('寸劲：弃置一张牌', 'he').set('ai', (card) => 8 - get.value(card)).set('logSkill', 'hyyzb3recunjin');
+						break;
+					}
+					case 'lose': {
+						const { bool } = await player
+							.chooseBool('寸劲：摸一张牌？')
+							.set('frequentSkill', 'hyyzb3recunjin')
+							.forResult();
+						if (bool) {
+							player.logSkill('hyyzb3recunjin')
+							await player.draw();
+						}
+						break;
+					}
+					case 'gain': {
+						player.chooseToUse('寸劲：使用一张牌').set('logSkill', 'hyyzb3recunjin');
+						break;
+					}
+				}
+			},
+			ai: {
+				threaten(player, target) {
+					if (target.hp == 1) return 4;
+					return 0.01;
+				},
+				effect: {
+					target(card, player, target) {
+						if (card.name == 'guohe') return [1, 2];
+					},
+				},
+			},
+		},
+		hyyzb3refusheng: {
+			audio: 'hyyzfusheng',
+			persevereSkill: true,
+			trigger: {
+				player: "loseAfter",
+				global: ["equipAfter", "addJudgeAfter", "gainAfter", "loseAsyncAfter", "addToExpansionAfter"],
+			},
+			filter(event, player) {
+				if (player.countCards("he")) return false;
+				const evt = event.getl(player);
+				return evt && evt.player == player && evt.cards2.length
+			},
+			async cost(event, trigger, player) {
+				const cards = trigger.getl(player).hs.filter(i => get.position(i) == 'd');
+				let list = ['失去1点体力', '减1点体力上限', '断拒'];
+
+				const { index } = await player
+					.chooseControlList(list, get.prompt('hyyzb3refusheng'))
+					.set('ai', () => {
+						const player = _status.event.player, list = _status.event.list;
+						let k = [];
+						if (player.hp > 1 && list.includes('失去1点体力')) k.add(list.indexOf('失去1点体力'));
+						if (cards.some(i => player.hasUseTarget(i) && player.getUseValue(i) >= 20) && player.isDamaged() && list.includes('减1点体力上限')) k.add(list.indexOf('减1点体力上限'));
+						if (k.length >= 2) k.add(3)
+						return k.randomGet();
+					})
+					.set('cards', cards).set('list', list)
+					.forResult();
+				if (index != list.length) {
+					event.result = {
+						bool: true,
+						cards: cards,
+						cost_data: list[index],
+					}
+				}
+			},
+			async content(event, trigger, player) {
+				switch (event.cost_data) {
+					case '断拒': await player.removeSkills(event.name); break;
+					case '失去1点体力': await player.loseHp(); break;
+					case '减1点体力上限': await player.loseMaxHp(); break;
+				}
+				await player.drawTo(player.getHandcardLimit())
+			},
+		},
+		hyyzb3recunjin_info: '寸劲|当你<span class=yellowtext>使用</span>/<span class=firetext>弃置</span>/<span class=thundertext>获得</span>牌后，你可以<span class=yellowtext>弃置</span>/<span class=firetext>摸</span>/<span class=thundertext>使用</span>一张牌。',
+		hyyzb3refusheng_info: `浮生|持恒技，你失去所有牌后，可以<br>①失去1点体力；<br>②减1点体力上限；<br>${get.hyyzIntroduce('断拒')}：失去此技；<br>然后将手牌摸至上限。`,
+
+	},
 	ym: {
 		/**@type { [String, Character, String, String ] } */
-		hyyz_ɸ_huyouyvzhou: ['忽悠宇宙', ['none', "shen", Infinity, ["hyyzhyyz"], []], `<img src=${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_hyyz.png width="76" height="22">`, '忽悠宇宙扩展内的各种随机武将'],
+		hyyz_ɸ_huyouyvzhou: ['忽悠宇宙', ['none', "shen", Infinity, ["hyyzhyyz"], []], `尾巴酱`, '忽悠宇宙扩展内的各种随机武将'],
 		hyyzhyyz: {
 			trigger: {
 				player: ["phaseBegin"],
@@ -63,7 +193,7 @@ const characters = {
 		hyyz_ɸ_huyouyvzhou_prefix: 'ɸ',
 		hyyzhyyz_info: `忽悠|锁定技，回合开始时，你失去所有其他技能并${get.hyyzIntroduce('净化')}，然后将一张武将牌替换为《忽悠宇宙》扩展中的随机武将，并将任一阶段插入到本回合的一个阶段后。`,
 
-		hyyz_ɸ_huyouzongzu: ['忽悠宗族', ['none', 'shen', 4, ['hyyzhyyz2'], []], `<img src=${lib.assetURL}extension/忽悠宇宙/other/hyyzSort_hyyz.png width="76" height="22">`, '随机宗族武将'],
+		hyyz_ɸ_huyouzongzu: ['忽悠宗族', ['none', 'shen', 4, ['hyyzhyyz2'], []], `尾巴酱`, '随机宗族武将'],
 		hyyz_ɸ_huyouzongzu_prefix: 'ɸ',
 		hyyzhyyz2: {
 			init(player) {
@@ -206,7 +336,7 @@ const characters = {
 				}
 			},
 			eg: {//lib.hyyz.clanSkills
-				"mengchenling": ["meng_xingjianya", "meng_yvkong"],
+				"mengchenling": ["hyyz_zzz_xingjianya", "hyyz_xt_yvkong"],
 				"clanzelie": ["clan_luji", "clan_lujing"],
 				"clanquhuo": ["clan_yangbiao", "clan_yangci", "clan_yangxiu", "clan_yangzhong"],
 				"clanbaozu": ["clan_zhongyan", "clan_zhonghui", "clan_zhongyu", "clan_zhongyao"],
@@ -216,13 +346,13 @@ const characters = {
 				"clanmuyin": ["clan_wuyi", "clan_wuxian", "clan_wuban", "clan_wukuang", "clan_wuqiao"]
 			}
 		},
-		hyyzhyyz2_info: '忽悠|锁定技，回合开始时，你随机获得一种宗族技，然后从随机三名该族角色的技能中选择两个技能获得，直到本巡结束。',
+		hyyzhyyz2_info: '忽悠|锁定技，回合开始时，你随机获得一种宗族技，然后从随机三名该族角色的技能中选择两个技能获得，直到你的下一回合结束。',
 
 		//hyyz_ɸ_meng: ['忽悠群友', ['none', 'shen', 4, ['hyyzhyyz3'], []], `<img src=${lib.assetURL}extension/忽悠宇宙/other/hyyz.png width="76" height="22">`, '随机群友武将'],
 		hyyzhyyz3: {},
-		hyyzhyyz3_info: `忽悠|锁定技，回合开始时，你失去所有其他技能并${get.hyyzIntroduce('净化')}，然后一张武将牌切换为《粉丝堂》的随机自设，从该设计师的五个圆梦作品中选择两个技能获得，直到本巡结束。`,
+		hyyzhyyz3_info: `忽悠|锁定技，回合开始时，你失去所有其他技能并${get.hyyzIntroduce('净化')}，然后一张武将牌切换为《粉丝堂》的随机自设，从该设计师的五个圆梦作品中选择两个技能获得，直到你的下一回合结束。`,
 
-		ym_zilinggudelige: ['紫灵谷的骊歌', ['female', "hyyz_other", 4, ["ymgengxin", "ymsanlian", "ymzhenggao"], ["zhu"]], `<img src=${lib.assetURL}extension/忽悠宇宙/lige.png width="50" height="50"><br>`, '紫灵谷的骊歌，名不见经传的业余小up，喜欢武将制作，本扩展包的初代作者。'],
+		ym_zilinggudelige: ['紫灵谷的骊歌', ['female', "hyyz_ɸ", 4, ["ymgengxin", "ymsanlian", "ymzhenggao"], ["zhu"]], `<img src=${lib.assetURL}extension/忽悠宇宙/lige.png width="50" height="50">-紫灵谷的骊歌`, '紫灵谷的骊歌，名不见经传的业余小up，喜欢武将制作，本扩展包的初代作者。'],
 		ymgengxin: {
 			audio: 4,
 			logAudio(event, player) {
@@ -625,7 +755,7 @@ const characters = {
 		ymyuanmeng_info: "圆梦|锁定技，你使用因“三连”获得的牌无距离限制且不能被响应，然后令交出此牌的角色摸一张牌。",
 		ymduangeng_info: "断更|结束阶段，你可以弃置一张“视频”，然后回复1点体力并摸两张牌。",
 
-		ym_jiulipu: ['就离谱', ['male', "hyyz_other", 3, ["ymzhuxin", "ymyingping", "ymzhuojian"], []], `<img src=${lib.assetURL}extension/忽悠宇宙/huohuoTail.png width="50" height="50"><br><font color=#ffff00>尾巴酱</font>`, '狂傲无比的，花里胡哨的，虚情假意的，拐弯抹角的，含沙射影的，隔岸观火的，添油加醋的，画蛇添足的，自以为是的，在下不才，可抨击一二。骊歌更新期间的某群友，无丝竹之乱耳、无案牍之劳形时期的尾巴酱。'],
+		ym_weibajiang: ['就离谱', ['male', "hyyz_ɸ", 3, ["ymzhuxin", "ymyingping", "ymzhuojian"], []], `<img src=${lib.assetURL}extension/忽悠宇宙/huohuoTail.png width="50" height="50">-尾巴酱`, '狂傲无比的，花里胡哨的，虚情假意的，拐弯抹角的，含沙射影的，隔岸观火的，添油加醋的，画蛇添足的，自以为是的，在下不才，可抨击一二。骊歌更新期间的某群友，无丝竹之乱耳、无案牍之劳形时期的尾巴酱。'],
 		ymzhuxin: {
 			audio: 2,
 			trigger: {
@@ -757,7 +887,7 @@ const characters = {
 		ymyingping_info: "应评|回合技，你于回合内/外获得牌后，可以使用其中一张即时牌且实体牌数-1/+1。",
 		ymzhuojian_info: "灼见|锁定技，虚拟牌和转化牌对你无效；结算后你获得一张本回合未使用过的牌。",
 
-		ym_canghaiyisu: ['沧海依酥', ['female', "hyyz_other", 4, ["ymmoyu", "ymxingmeng"], []], '', '感觉没什么好介绍的，就是上班没事的时候摸鱼划水，有事的时候拼命干活。工作累了就停下休息吧，但是人生不能一直原地踏步，所以该前进的时候也要努力前行啊。'],
+		ym_canghaiyisu: ['沧海依酥', ['female', "hyyz_ɸ", 4, ["ymmoyu", "ymxingmeng"], []], '沧海依酥', '感觉没什么好介绍的，就是上班没事的时候摸鱼划水，有事的时候拼命干活。工作累了就停下休息吧，但是人生不能一直原地踏步，所以该前进的时候也要努力前行啊。'],
 		ymmoyu: {
 			trigger: {
 				global: "phaseUseBefore"
@@ -790,7 +920,7 @@ const characters = {
 		"ymmoyu_info": "摸鱼|锁定技，你跳过出牌阶段；其他角色的出牌阶段开始时，你摸一张牌，然后可以使用一张牌。",
 		"ymxingmeng_info": "醒梦|其他角色的回合结束后，若你于此回合内造成过伤害，你执行一个额外的回合且此回合内〖摸鱼〗失效。",
 
-		ym_re_canghaiyisu: ['沧海依酥', ['female', 'hyyz_other', 4, ['ymremoyu', 'ymrexingmeng'], []], '', ''],
+		ym_re_canghaiyisu: ['沧海依酥', ['female', 'hyyz_ɸ', 4, ['ymremoyu', 'ymrexingmeng'], []], '沧海依酥', ''],
 		ymremoyu: {
 			init(player) {
 				player.storage.ymremoyu = [];
@@ -949,7 +1079,7 @@ const characters = {
 		ymrexingmeng_info: "醒梦|觉醒技，回合开始时，若你记录的牌名数不小于当前存活人数，则你失去技能〖摸鱼〗，然后获得技能〖忆梦〗。",
 		ymyimeng_info: "忆梦|每回合每种牌名限一次，你可以将一张牌当做已记录牌名的牌使用或打出。",
 
-		ym_menghai: ['梦海离殇', ['male', "hyyz_other", 4, ["ymyingji", "ymanxing"], []], '', '我是梦海离殇，以前的名字是影寂-黯星，驭空的设计者，现在这个(影寂-黯星)名字变成了我如今的技能，技能效果吗就是按照技能名字的意思写的，虽然二技能不太像，但是是我想要的技能效果，台词也是我朋友帮我写的，谢谢他帮我写了。'],
+		ym_menghai: ['梦海离殇', ['male', "hyyz_ɸ", 4, ["ymyingji", "ymanxing"], []], '梦海离殇', '我是梦海离殇，以前的名字是影寂-黯星，驭空的设计者，现在这个(影寂-黯星)名字变成了我如今的技能，技能效果吗就是按照技能名字的意思写的，虽然二技能不太像，但是是我想要的技能效果，台词也是我朋友帮我写的，谢谢他帮我写了。'],
 		ymyingji: {
 			audio: 2,
 			enable: "phaseUse",
@@ -1021,7 +1151,7 @@ const characters = {
 		"ymyingji_info": "影寂|出牌阶段限一次，你可以弃置一张黑色牌，视为使用一张无距离限制且不计入次数上限的【杀】。",
 		"ymanxing_info": "黯星|一名角色受到伤害后，你可以进行一次判定。若结果为黑色，你对伤害来源造成1点伤害；否则，受伤角色摸一张牌。",
 
-		ym_sp_menghai: ['梦海离殇', ['male', 'hyyz_other', 4, ['ymspxingmeng', 'ymlangu'], []], '', ''],
+		ym_sp_menghai: ['梦海离殇', ['male', 'hyyz_ɸ', 4, ['ymspxingmeng', 'ymlangu'], []], '梦海离殇', ''],
 		ymspxingmeng: {
 			audio: 3,
 			trigger: {
@@ -1066,7 +1196,7 @@ const characters = {
 		ymspxingmeng_info: "星梦|每回合限一次，当你对一名角色造成伤害后，若其当前手牌数：多于你，你可以弃置其一张牌；少于你，你可以摸一张牌；等于你，你可以对其造成1点伤害。",
 		ymlangu_info: "兰谷|一名角色的结束阶段，若其本回合造成过伤害，你可以令其摸×张牌（×为其本回合造成的总伤害值）。",
 
-		ym_miealiei: ['咩阿栗诶', ['female', "hyyz_other", "3/4", ["ymxunshi", "ymzaobing", "ympanli"], []], '', '原名来星那由，砂狼白子设计师，因为找了坑人的师傅而走了设计的歪路，后来因为一些事情，转生了，改名咩阿栗。一技能拜师，还原了那由拜师时的过程，师傅出多少，他就出多少，二技能，体现了那由制作武将，从被师傅怒骂到让师傅感到满意的过程，觉醒技就是最近，那由的武将经过群友的一番修改，提建议后，意识到了那个坑比师傅，于是果断离开了师傅，觉醒后的精修和修改造兵都是为了体现那由酱的进步总结：前期攒灵感，后期就是觉醒钟会体验卡。'],
+		ym_miealiei: ['咩阿栗诶', ['female', "hyyz_ɸ", "3/4", ["ymxunshi", "ymzaobing", "ympanli"], []], '咩阿栗诶', '原名来星那由，砂狼白子设计师，因为找了坑人的师傅而走了设计的歪路，后来因为一些事情，转生了，改名咩阿栗。一技能拜师，还原了那由拜师时的过程，师傅出多少，他就出多少，二技能，体现了那由制作武将，从被师傅怒骂到让师傅感到满意的过程，觉醒技就是最近，那由的武将经过群友的一番修改，提建议后，意识到了那个坑比师傅，于是果断离开了师傅，觉醒后的精修和修改造兵都是为了体现那由酱的进步总结：前期攒灵感，后期就是觉醒钟会体验卡。'],
 		ymxunshi: {
 			audio: 2,
 			logAudio: () => [
@@ -1418,7 +1548,7 @@ const characters = {
 		ymzaobing_rewrite_info: "造兵|出牌阶段每种花色限一次，你可以重铸一张牌（不计入手牌上限）。若此牌花色与“灵感”中的一张牌花色相同，你选择一项：1.弃置一张灵感，摸两张牌。2.视为使用一张本回合未以次法使用过的锦囊牌。否则，将一张手牌加入“灵感”。",
 		ymjingxiu_info: "精修|当你使用〖造兵〗牌时，可以弃置至多三张“灵感”，令此牌额外指定等量的目标或摸等量的牌。",
 
-		ym_miealiei2: ['魔羊', ['female', 'hyyz_other', 4, ['ymkunlv', 'ymsiyan'], []], '', ''],
+		ym_sp_miealiei: ['魔羊', ['female', 'hyyz_ɸ', 4, ['ymkunlv', 'ymsiyan'], []], '咩阿栗诶', ''],
 		ymkunlv: {
 			audio: 1,
 			forced: true,
@@ -1608,7 +1738,135 @@ const characters = {
 		ymsiyan_info: "思焰|你的手牌因〖困虑〗调整后，你可重铸手中一种颜色的所有牌。若你因此获得至少两种类别不同的牌，则你可从中央区内获得一张未因此获得的类别牌。",
 		ymsiling_info: "司凌|出牌阶段每名其他角色限一次，你可摸一张牌并与一名手牌数不大于你的角色拼点，若你赢，则视为对其使用一张【知已知彼】然后弃置其一张牌/造成一点伤害。",
 
-		ym_youyi: ['柚衣', ['female', "hyyz_other", 4, ["ymzhumeng", "ymgongmian"], []], '', '我的形象就用我的头像吧~魔女之旅的伊蕾娜，也是我很喜欢很憧憬的角色。沾沾光~逐梦技能是追逐梦想的意思嘛。其实就是完善圆梦武将的设计，同时现实中也在小小的追梦嘛。技能效果就是一件事去反复做，精益求精。共励技能是共同勉励，一起加油的意思。就是群里的大家一起努力进步，互相吸取经验，争取更完善的设计。同时也是现实中希望大家都可以一起努力啦~实战方面我的思路是两个技能有一定的配合，2技能可以蹭蹭多过牌多用牌的武将，也是向有能力的人学习借鉴经验嘛~但是别人的东西终究是别人的，每回合只能一次。也是自我表现想进步，终究还是靠自己。不限次数和距离就是表示精益求精嘛~'],
+		ym_re_miealiei: ['眠羊', ['female', 'hyyz_ɸ', '3/4', ['ymfanxing', 'ymqinglv'], []], '卸锱轻旅-咩阿栗诶', '负重寻找答案，可能会因为背上的重量而忘记了自己想要寻找的答案，反之亦然'],
+		ymfanxing_info: '繁行|锁定技，你每回合使用首张牌后，需选择①重铸一组同花手牌;②〖制衡〗区域内所有牌③将手牌数向体力上限调整一。',
+		ymfanxing: {
+			audio: 1,
+			trigger: {
+				player: 'useCardAfter'
+			},
+			listFilter(player) {
+				let list = [];
+				if (!lib.skill.ymfanxing.list?.length) return [];
+				for (let i of lib.skill.ymfanxing.list) {
+					if (
+						i == '重铸一组同花手牌' && player.countCards('h', (card) => player.countCards('h', (card2) => card != card2 && get.suit(card) == get.suit(card2)) > 0) > 0 ||
+						i == '〖制衡〗区域内所有牌' && player.countCards('he') ||
+						i == '将手牌数向体力上限调整一' && player.countCards('h') != player.maxHp
+					) list.add(i);
+				};
+				return list;
+			},
+			filter(event, player) {
+				if (player.hasHistory('useCard', (evt) => evt != event)) return false;
+				return lib.skill.ymfanxing.listFilter(player).length > 0;
+			},
+			forced: true,
+			async content(event, trigger, player) {
+				let list = lib.skill.ymfanxing.listFilter(player);
+				if (!list.length) return;
+				const { index } = await player
+					.chooseControlList(list, true)
+					.set('ai', () => 0)
+					.forResult();
+				if (index != undefined) {
+					if (list[index].startsWith('重')) {
+						const { cards } = await player
+							.chooseCard('重铸一组同花手牌', 2, 'h', (card) => {
+								if (ui.selected.cards.length) {
+									return get.suit(card) == get.suit(ui.selected.cards[0])
+								}
+								return player.countCards('h', (card2) => card != card2 && get.suit(card) == get.suit(card2))
+							})
+							.set('complexCard', true)
+							.set('ai', () => true)
+							.forResult();
+						if (cards) {
+							await player.recast(cards);
+						}
+					} else if (list[index].startsWith('〖')) {
+						let cards = player.getCards('hej');
+						await player.discard(cards);
+						await player.draw(cards.length);
+					} else if (list[index].startsWith('将')) {
+						if (player.countCards('h') > player.maxHp) await player.chooseToDiscard(true);
+						else if (player.countCards('h') < player.maxHp) await player.draw();
+					}
+				}
+			},
+			list: ['重铸一组同花手牌', '〖制衡〗区域内所有牌', '将手牌数向体力上限调整一'],
+		},
+		ymqinglv_info: '轻旅|结束阶段，你可以执行〖繁行〗中的一项，若获得牌数不大于你弃牌阶段的弃牌数，你可删去此项并摸两张牌。',
+		ymqinglv: {
+			audio: 1,
+			trigger: {
+				player: 'phaseJieshuBegin'
+			},
+			filter(event, player) {
+				if (!player.hasSkill('ymfanxing')) return false;
+				return lib.skill.ymfanxing.listFilter(player).length > 0;
+			},
+			async cost(event, trigger, player) {
+				let list = lib.skill.ymfanxing.listFilter(player);
+				if (!list.length) return;
+				const { index } = await player
+					.chooseControlList(list, true)
+					.set('ai', () => 0)
+					.forResult();
+				if (index != undefined) event.result = {
+					bool: true,
+					cost_data: {
+						index: index
+					}
+				}
+			},
+			async content(event, trigger, player) {
+				let list = lib.skill.ymfanxing.listFilter(player)
+				const control = list[event.cost_data.index];
+
+				let num1 = 0;
+				if (control.startsWith('重')) {
+					const { cards } = await player
+						.chooseCard('重铸一组同花手牌', 2, 'h', (card) => {
+							if (ui.selected.cards.length) {
+								return get.suit(card) == get.suit(ui.selected.cards[0])
+							}
+							return player.countCards('h', (card2) => card != card2 && get.suit(card) == get.suit(card2))
+						})
+						.set('complexCard', true)
+						.set('ai', () => true)
+						.forResult();
+					if (cards) {
+						await player.recast(cards);
+						num1 = cards.length;
+					}
+				} else if (control.startsWith('〖')) {
+					let cards = player.getCards('hej');
+					num1 = cards.length;
+					await player.discard(cards);
+					await player.draw(cards.length);
+				} else if (control.startsWith('将')) {
+					if (player.countCards('h') > player.maxHp) await player.chooseToDiscard(true);
+					else if (player.countCards('h') < player.maxHp) {
+						await player.draw();
+						num1 = 1;
+					}
+				}
+
+				let num2 = 0;
+				player.getHistory("lose", function (evt) {
+					if (evt.type != "discard") return false;
+					let evt2 = evt.getParent("phaseDiscard");
+					if (evt2 && evt2.player == player) num2 += evt.cards2.length;
+				});
+				if (num1 < num2) {
+					lib.skill.ymfanxing.list.remove(control)
+					game.log(lib.skill.ymfanxing.list)
+					player.draw(2)
+				}
+			},
+		},
+		ym_youyi: ['柚衣', ['female', "hyyz_ɸ", 4, ["ymzhumeng", "ymgongmian"], []], '柚衣', '我的形象就用我的头像吧~魔女之旅的伊蕾娜，也是我很喜欢很憧憬的角色。沾沾光~逐梦技能是追逐梦想的意思嘛。其实就是完善圆梦武将的设计，同时现实中也在小小的追梦嘛。技能效果就是一件事去反复做，精益求精。共励技能是共同勉励，一起加油的意思。就是群里的大家一起努力进步，互相吸取经验，争取更完善的设计。同时也是现实中希望大家都可以一起努力啦~实战方面我的思路是两个技能有一定的配合，2技能可以蹭蹭多过牌多用牌的武将，也是向有能力的人学习借鉴经验嘛~但是别人的东西终究是别人的，每回合只能一次。也是自我表现想进步，终究还是靠自己。不限次数和距离就是表示精益求精嘛~'],
 		ymzhumeng: {
 			audio: 2,
 			lastcard(player) {
@@ -1702,7 +1960,7 @@ const characters = {
 		ymzhumeng_info: "逐梦|出牌阶段限一次。你可以将一张牌当上次使用的基本牌或普通锦囊牌使用（无次数和距离限制）。",
 		ymgongmian_info: "共勉|每回合限一次。当一名角色于回合内使用了两次同名的牌后，你可以将第二张同名牌交给除使用者外的一名角色（以此法交出的牌无次数和距离限制）。",
 
-		ym_yanfeng: ['焰枫', ['male', "hyyz_other", 4, ["ymbianma", "ymxianpo"], []], '', '介绍也没什么，不过是小说的自己，技能就关於我编码，无次数是因为修改规则，仙魄就是群内的人都叫我“魈上仙”，可叠加是因为我不可能只帮那三个，这三个效果是被我帮助人的馈赠。在此附一首诗句我非我，心外求，独立于世，难觅真我。寻寻觅觅，空落泪，我仍是我，未曾改变。梦中之我，真实之你，跨越时空，交相辉映。心若有光，何处不乐，我非我，但我是我。'],
+		ym_yanfeng: ['焰枫', ['male', "hyyz_ɸ", 4, ["ymbianma", "ymxianpo"], []], '魈', '介绍也没什么，不过是小说的自己，技能就关於我编码，无次数是因为修改规则，仙魄就是群内的人都叫我“魈上仙”，可叠加是因为我不可能只帮那三个，这三个效果是被我帮助人的馈赠。在此附一首诗句我非我，心外求，独立于世，难觅真我。寻寻觅觅，空落泪，我仍是我，未曾改变。梦中之我，真实之你，跨越时空，交相辉映。心若有光，何处不乐，我非我，但我是我。'],
 		ymbianma: {
 			mod: {
 				cardUsable(card) {
@@ -1799,7 +2057,7 @@ const characters = {
 		ymbianma_info: "编码|锁定技，你使用牌无次数限制。",
 		ymxianpo_info: "仙魄|准备阶段你选择并获得一项：<br>1.摸牌阶段多摸一张牌。<br>2.判定阶段多摸一张牌并弃置判定区内的牌。<br>3.你的手牌上限+1。",
 
-		ym_fushengyi: ['浮生亦', ['female', "hyyz_other", 4, ["ymdaiduo", "ymcunzhi", ""], []], '', ''],
+		ym_fushengyi: ['浮生亦', ['female', "hyyz_ɸ", 4, ["ymdaiduo", "ymcunzhi", ""], []], '浮生亦', ''],
 		ymdaiduo: {
 			init(player) {
 				player.storage.ymdaiduo = 0;
@@ -2020,7 +2278,7 @@ const characters = {
 		ymcunzhi2: "存志",
 		ymcunzhi_info: "存志|锁定技，当你跳过一个阶段后：<br>1.准备阶段，令一名角色将手牌置于武将牌上直到其回合开始。<br>2.摸牌阶段，观看并获得一名其他角色数量最多的花色的手牌。<br>3.出牌阶段，失去1点体力并对至多X名角色造成1点伤害。<br>4.弃牌阶段，将花色不同的任意手牌交给一名其他角色。<br>5.结束阶段，回复1点体力，观看并将牌堆底的X张牌以任意顺序置于牌堆顶。<br>",
 
-		ym_lalalala: ['啦啦啦啦', ['male', "hyyz_other", 4, ["ymanli"], []], '', '啦啦啦啦，新人。十分想要朋友的啦啦啦啦在学校到处安利游戏，只要他玩了这个游戏，啦啦啦啦就会开心，感觉自己帮到了忙，有成就感。反之，啦啦啦啦就会陷入脑补和精神内耗中。如果啦啦啦啦成功让整个班都玩上了自己安利的游戏，他就会反复回味这个过程使自己开心，如果啦啦啦啦在达到使命前就被外界的压力击倒，他就会走向极端，认为世上所有都不喜欢自己。'],
+		ym_lalalala: ['啦啦啦啦', ['male', "hyyz_ɸ", 4, ["ymanli"], []], '啦啦啦啦', '啦啦啦啦，新人。十分想要朋友的啦啦啦啦在学校到处安利游戏，只要他玩了这个游戏，啦啦啦啦就会开心，感觉自己帮到了忙，有成就感。反之，啦啦啦啦就会陷入脑补和精神内耗中。如果啦啦啦啦成功让整个班都玩上了自己安利的游戏，他就会反复回味这个过程使自己开心，如果啦啦啦啦在达到使命前就被外界的压力击倒，他就会走向极端，认为世上所有都不喜欢自己。'],
 		ymanli: {
 			audio: 10,
 			logAudio: () => [
@@ -2191,7 +2449,7 @@ const characters = {
 		ymyongle_info: "永乐|回合结束后，你将手牌摸至体力上限并回复1点体力。",
 		ymguli_info: "孤立|锁定技，回合结束后，你与一名其他角色各失去1点体力。",
 
-		ym_rijiu: ['日玖阳气冲三关', ['male', "hyyz_other", 3, ["ymxuanxiang", "ymxiaoxing", "ymhuanying"], []], '', '形象就斗胆借用一下爱缇的吧，至于为什么想借用她?因为我认为我和她很像，在平凡的现实中撕开一道口子，创造一个只属于自己的幻想的世界。这个武将设计是玩法驱动，记得在很久之前，up曾经对我说过“这个机制值得更优秀”。但是随着时间，它已经被我慢慢忘记了。直到我翻看以前的武将，这才想起，因此，我最终决定用这个“值得更优秀”的机制来写这个武将。'],
+		ym_rijiu: ['日玖阳气冲三关', ['male', "hyyz_ɸ", 3, ["ymxuanxiang", "ymxiaoxing", "ymhuanying"], []], '日玖阳气冲三关', '形象就斗胆借用一下爱缇的吧，至于为什么想借用她?因为我认为我和她很像，在平凡的现实中撕开一道口子，创造一个只属于自己的幻想的世界。这个武将设计是玩法驱动，记得在很久之前，up曾经对我说过“这个机制值得更优秀”。但是随着时间，它已经被我慢慢忘记了。直到我翻看以前的武将，这才想起，因此，我最终决定用这个“值得更优秀”的机制来写这个武将。'],
 		ymxuanxiang: {
 			mark: true,
 			intro: {
@@ -2383,7 +2641,7 @@ const characters = {
 		ymhuanying_info: "还因|当一张牌被使用时，若游戏外有同名的牌，你不能响应此牌，然后将游戏外的同名牌插入牌堆。",
 		ymxiaoxing_info: "晓心|当有牌移出游戏时，你摸一张牌。当有牌加入游戏时，你可以失去1点体力获得之，或回复1点体力。",
 
-		ym_xilin: ['西琳', ['male', "hyyz_other", 3, ["ymbailan", "ymle", "ymdiaotu"], []], '', '西琳感觉没啥好说的吧，就是太摆了，有想法也摆，有时候还没事来群刷个乐的表情，有时掏出一下吊图来。'],
+		ym_xilin: ['西琳', ['male', "hyyz_ɸ", 3, ["ymbailan", "ymle", "ymdiaotu"], []], '西琳', '西琳感觉没啥好说的吧，就是太摆了，有想法也摆，有时候还没事来群刷个乐的表情，有时掏出一下吊图来。'],
 		ymbailan: {
 			trigger: {
 				player: 'phaseUseEnd'
@@ -2533,7 +2791,7 @@ const characters = {
 		ymle_info: "乐|出牌阶段限一次，你可以将一张牌当【乐不思蜀】使用，然后可以弃置一张牌并选择一名判定区有【乐不思蜀】的其他角色。若如此做，你声明一种花色，该角色进行延时类锦囊牌的判定时，此花色的判定结果反转。",
 		ymdiaotu_info: "吊图|结束阶段，你可以弃置一张牌视为使用【万箭齐发】或【桃园结义】。",
 
-		ym_zhongshiweiyu: ['终世微雨', ['male', "hyyz_other", 3, ["ymxudu", "ymfenxin"], []], '', ''],
+		ym_zhongshiweiyu: ['终世微雨', ['male', "hyyz_ɸ", 3, ["ymxudu", "ymfenxin"], []], '微雨', ''],
 		ymxudu: {
 			forced: true,
 			trigger: {
@@ -2666,7 +2924,7 @@ const characters = {
 		ymxudu_info: "虚度|锁定技，本回合进入弃牌堆的牌数首次超过你的体力上限后，你加一点体力上限，本回合你不能使用牌且不计入座次和距离的计算。",
 		ymfenxin_info: "奋心|①每回合每种类型的牌限一次。当一张牌被使用时， 你可以减1点体力上限并获得此牌；若使用者为你，此牌不计入次数限制。②若你本回合获得且失去所有类别的牌，此技能视为未发动。",
 
-		ym_daowuji: ['道无吉', ['male', "hyyz_other", 8, ["ymfenji", "ymduofa", "ymdaogui"], []], '', ''],
+		ym_daowuji: ['道无吉', ['male', "hyyz_ɸ", 8, ["ymfenji", "ymduofa", "ymdaogui"], []], '埋埋埋埋喵', ''],
 		ymfenji: {
 			unique: true,
 			init(player) {
@@ -3085,7 +3343,7 @@ const characters = {
 		ymdaogui_info: "道诡|窥天技，你可以令一名角色加/减1点体力上限；判定者可以将此操作改为终止判定。结算后，你获得并展示一张人格牌。",
 		ymkuitian_info: "窥天技|一名角色判定前，若你未「窥天」，你猜测判定结果的花色和点数。判定结果确定后，若至少猜对一项，则「窥天」成功并触发「窥天」技。",
 
-		ym_sp_daowuji: ['道无吉', ['male', 'hyyz_other', 4, ['ymgualun', 'ymbolu', 'ymxiuyao'], []], '', ''],
+		ym_sp_daowuji: ['道无吉', ['male', 'hyyz_ɸ', 4, ['ymgualun', 'ymbolu', 'ymxiuyao'], []], '埋埋埋埋喵', ''],
 		ymgualun: {
 			audio: "shejian",
 			mark: true,
@@ -3113,7 +3371,7 @@ const characters = {
 					trigger.ymgualun = true;
 					player.give(give, trigger.player);
 					if (player.canCompare(trigger.player)) {
-						const { result } = await player.chooseToCompare(trigger.player);
+						const result = await player.chooseToCompare(trigger.player).forResult()
 						if (result) {
 							if (result.player) {
 								if (player.getExpansions('ymgualun').some(
@@ -3347,7 +3605,7 @@ const characters = {
 		ymbolu_info: "博箓|锁定技，当你需要使用或打出【闪】时，你可以进行一次判定，若判定结果与你需要使用牌的牌名字数相同，你视为使用之，若于你回合内则改为将一张牌当作此牌使用或打出。",
 		ymxiuyao_info: "修爻|锁定技，你的拼点牌点数+X，X为【卦论】的牌数。〖博箓〗判定失败后，你可以摸一张牌并移除此牌名；然后将判定牌与【卦论】的一张牌交换。",
 
-		ym_lengruohan: ['冷若寒', ['male', "hyyz_other", 4, ["ymguxing", "ymqisi"], []], '', ''],
+		ym_lengruohan: ['冷若寒', ['male', "hyyz_ɸ", 4, ["ymguxing", "ymqisi"], []], '冷若寒', ''],
 		ymguxing: {
 			trigger: {
 				global: 'phaseBegin'
@@ -3460,7 +3718,7 @@ const characters = {
 		ymguxing_info: "孤行|每回合开始时，你可以将一张手牌当【调虎离山】对非当前回合角色使用，然后令当前回合角色摸与目标数等量的牌。",
 		ymqisi_info: "绮思|限定技，出牌阶段，你可以视为使用X张无距离限制的即时牌，若此牌为<span class='bluetext'>多</span>/<span class='legendtext'>单</span>目标牌，则目标数为随机<span class='bluetext'>多个</span>/<span class='legendtext'>单个</span>（X为本局游戏你使用即时牌的次数）。",
 
-		ym_xinzhi: ['心之所向_星之所向', ['female', 'hyyz_other', 4, ['ymjingjin'], []], '', ''],
+		ym_xinzhi: ['心之所向_星之所向', ['female', 'hyyz_ɸ', 4, ['ymjingjin'], []], '心之所向_星之所向', ''],
 		ymjingjin: {
 			init(player) {
 				if (!player.storage.ymjingjin) player.storage.ymjingjin = [4, 2, 3, 1];
@@ -3511,9 +3769,9 @@ const characters = {
 					}
 					return [top];
 				};
-				const { result: { bool, moved } } = await next;
-				if (bool) {
-					let top = moved[0];
+				const result = await next.forResult().forResult()
+				if (result.bool) {
+					let top = result.moved[0];
 					top.reverse();
 					for (var i = 0; i < top.length; i++) {
 						ui.cardPile.insertBefore(top[i], ui.cardPile.firstChild);
@@ -3545,7 +3803,7 @@ const characters = {
 				};
 				if (target && target.isIn()) {
 					let list = [1, 2, 3, 4];
-					const { result: { control: a } } = await target.chooseControl(list)
+					const { control: a } = await target.chooseControl(list)
 						.set('prompt', '〖精进〗：观看牌堆顶几张牌？')
 						.set('prompt2', '锁定技，当你对一名角色造成或受到伤害时，你观看牌堆顶4张牌并以任意顺序放回，然后你弃置受伤角色2张牌、令其摸3张牌并令伤害来源将手牌数调整至1。')
 						.set('ai', () => {
@@ -3554,11 +3812,11 @@ const characters = {
 							} else {
 								return 1;
 							}
-						});
+						}).forResult()
 					list.remove(a);
 					player.storage.ymjingjin[0] = a;
 
-					const { result: { control: b } } = await target.chooseControl(list)
+					const { control: b } = await target.chooseControl(list)
 						.set('prompt', '〖精进〗：弃置受伤角色几张牌？')
 						.set('prompt2', '锁定技，当你对一名角色造成或受到伤害时，你观看牌堆顶4张牌并以任意顺序放回，然后你弃置受伤角色2张牌、令其摸3张牌并令伤害来源将手牌数调整至1。').set('ai', () => {
 							if (!_status.event.player.hasSkill('ymjingjin')) {
@@ -3566,11 +3824,11 @@ const characters = {
 							} else {
 								return 4;
 							}
-						});
+						}).forResult()
 					list.remove(b);
 					player.storage.ymjingjin[1] = b;
 
-					const { result: { control: c } } = await target.chooseControl(list)
+					const { control: c } = await target.chooseControl(list)
 						.set('prompt', '〖精进〗：受伤角色摸几张牌？')
 						.set('prompt2', '锁定技，当你对一名角色造成或受到伤害时，你观看牌堆顶4张牌并以任意顺序放回，然后你弃置受伤角色2张牌、令其摸3张牌并令伤害来源将手牌数调整至1。').set('ai', () => {
 							if (!_status.event.player.hasSkill('ymjingjin')) {
@@ -3578,13 +3836,13 @@ const characters = {
 							} else {
 								return 3;
 							}
-						});
+						}).forResult()
 					list.remove(c);
 					player.storage.ymjingjin[2] = c;
 
-					const { result: { control: d } } = await target.chooseControl(list)
+					const { control: d } = await target.chooseControl(list)
 						.set('prompt', '〖精进〗：伤害来源将手牌数调整至？')
-						.set('prompt2', '锁定技，当你对一名角色造成或受到伤害时，你观看牌堆顶4张牌并以任意顺序放回，然后你弃置受伤角色2张牌、令其摸3张牌并令伤害来源将手牌数调整至1。').set('ai', () => 2);
+						.set('prompt2', '锁定技，当你对一名角色造成或受到伤害时，你观看牌堆顶4张牌并以任意顺序放回，然后你弃置受伤角色2张牌、令其摸3张牌并令伤害来源将手牌数调整至1。').set('ai', () => 2).forResult()
 					list.remove(d);
 					player.storage.ymjingjin[3] = d;
 				}
@@ -3607,7 +3865,7 @@ const characters = {
 		},
 		ymjingjin_info: "精进|锁定技，当你对一名角色造成或受到伤害时，你观看牌堆顶4张牌并以任意顺序放回，然后你弃置受伤角色2张牌、令其摸3张牌并令伤害来源将手牌数调整至1。历战：你与该角色中手牌数较小者交换〖精进〗中的任意个阿拉伯数字。",
 
-		ym_mushancai: ['木善才', ['male', 'hyyz_other', 4, ['ymjiejian', 'ymyingbian'], []], '', ''],
+		ym_mushancai: ['木善才', ['male', 'hyyz_ɸ', 4, ['ymjiejian', 'ymyingbian'], []], '木善才', ''],
 		ymjiejian: {
 			enable: 'phaseUse',
 			filter(event, player) {
@@ -3760,7 +4018,7 @@ const characters = {
 		ymjiejian_info: "借鉴|出牌阶段，你可与一名其他角色进行拼点，若你赢，则你与其各摸一张牌或各恢复一个装备栏，然后你可视为使用一张牌名字数为X的基本牌或普通锦囊牌。X为本次拼点牌牌名之和的一半（向下取整）。若你本回合发动此技的次数达到X，此技能本回合失效。",
 		ymyingbian_info: "应变|当你没有手牌且需要拼点时，你可以废除一个装备栏并使用牌堆中一张对应副类别装备牌进行拼点。",
 
-		ym_zhouwang: ['纣王', ["female", "hyyz_other", '3/6', ["ymhumeng", "ymqiuyu"], []], '', '穷兵黩武、重刑厚敛、拒谏饰非，是与夏桀并称“桀纣”的典型暴君'],
+		ym_zhouwang: ['纣王', ["female", "hyyz_ɸ", '3/6', ["ymhumeng", "ymqiuyu"], []], '纣王', '穷兵黩武、重刑厚敛、拒谏饰非，是与夏桀并称“桀纣”的典型暴君'],
 		ymhumeng: {
 			audio: 7,
 			init(player) {
@@ -4256,136 +4514,7 @@ const characters = {
 		ymhumeng_mouth_info: '吞梦|摸牌阶段，你可以改为与至多6名其他角色拼点。你以此法拼点的牌的点数改为从“六狐”牌中任意一张的点数。没赢的角色选择弃置一张牌或令你摸一张牌',
 		ymqiuyu_info: "求谕|出牌阶段限一次，你可以与至少X名其他角色进行议事，X为1/3场上人数+1(向下取整)。若红>黑，你对红色方使用一张【桃园结义】;若黑>红,你对黑色方使用一张【五谷丰登】;相等，你回复一点体力并摸两张牌",
 
-		ym_miealiei3: ['眠羊', ['female', 'hyyz_other', '3/4', ['ymfanxing', 'ymqinglv'], []], '卸锱轻旅-咩阿栗诶', '负重寻找答案，可能会因为背上的重量而忘记了自己想要寻找的答案，反之亦然'],
-		ymfanxing_info: '繁行|锁定技，你每回合使用首张牌后，需选择①重铸一组同花手牌;②〖制衡〗区域内所有牌③将手牌数向体力上限调整一。',
-		ymfanxing: {
-			audio: 1,
-			trigger: {
-				player: 'useCardAfter'
-			},
-			listFilter(player) {
-				let list = [];
-				if (!lib.skill.ymfanxing.list?.length) return [];
-				for (let i of lib.skill.ymfanxing.list) {
-					if (
-						i == '重铸一组同花手牌' && player.countCards('h', (card) => player.countCards('h', (card2) => card != card2 && get.suit(card) == get.suit(card2)) > 0) > 0 ||
-						i == '〖制衡〗区域内所有牌' && player.countCards('he') ||
-						i == '将手牌数向体力上限调整一' && player.countCards('h') != player.maxHp
-					) list.add(i);
-				};
-				return list;
-			},
-			filter(event, player) {
-				if (player.hasHistory('useCard', (evt) => evt != event)) return false;
-				return lib.skill.ymfanxing.listFilter(player).length > 0;
-			},
-			forced: true,
-			async content(event, trigger, player) {
-				let list = lib.skill.ymfanxing.listFilter(player);
-				if (!list.length) return;
-				const { index } = await player
-					.chooseControlList(list, true)
-					.set('ai', () => 0)
-					.forResult();
-				if (index != undefined) {
-					if (list[index].startsWith('重')) {
-						const { cards } = await player
-							.chooseCard('重铸一组同花手牌', 2, 'h', (card) => {
-								if (ui.selected.cards.length) {
-									return get.suit(card) == get.suit(ui.selected.cards[0])
-								}
-								return player.countCards('h', (card2) => card != card2 && get.suit(card) == get.suit(card2))
-							})
-							.set('complexCard', true)
-							.set('ai', () => true)
-							.forResult();
-						if (cards) {
-							await player.recast(cards);
-						}
-					} else if (list[index].startsWith('〖')) {
-						let cards = player.getCards('hej');
-						await player.discard(cards);
-						await player.draw(cards.length);
-					} else if (list[index].startsWith('将')) {
-						if (player.countCards('h') > player.maxHp) await player.chooseToDiscard(true);
-						else if (player.countCards('h') < player.maxHp) await player.draw();
-					}
-				}
-			},
-			list: ['重铸一组同花手牌', '〖制衡〗区域内所有牌', '将手牌数向体力上限调整一'],
-		},
-		ymqinglv_info: '轻旅|结束阶段，你可以执行〖繁行〗中的一项，若获得牌数不大于你弃牌阶段的弃牌数，你可删去此项并摸两张牌。',
-		ymqinglv: {
-			audio: 1,
-			trigger: {
-				player: 'phaseJieshuBegin'
-			},
-			filter(event, player) {
-				if (!player.hasSkill('ymfanxing')) return false;
-				return lib.skill.ymfanxing.listFilter(player).length > 0;
-			},
-			async cost(event, trigger, player) {
-				let list = lib.skill.ymfanxing.listFilter(player);
-				if (!list.length) return;
-				const { index } = await player
-					.chooseControlList(list, true)
-					.set('ai', () => 0)
-					.forResult();
-				if (index != undefined) event.result = {
-					bool: true,
-					cost_data: {
-						index: index
-					}
-				}
-			},
-			async content(event, trigger, player) {
-				let list = lib.skill.ymfanxing.listFilter(player)
-				const control = list[event.cost_data.index];
-
-				let num1 = 0;
-				if (control.startsWith('重')) {
-					const { cards } = await player
-						.chooseCard('重铸一组同花手牌', 2, 'h', (card) => {
-							if (ui.selected.cards.length) {
-								return get.suit(card) == get.suit(ui.selected.cards[0])
-							}
-							return player.countCards('h', (card2) => card != card2 && get.suit(card) == get.suit(card2))
-						})
-						.set('complexCard', true)
-						.set('ai', () => true)
-						.forResult();
-					if (cards) {
-						await player.recast(cards);
-						num1 = cards.length;
-					}
-				} else if (control.startsWith('〖')) {
-					let cards = player.getCards('hej');
-					num1 = cards.length;
-					await player.discard(cards);
-					await player.draw(cards.length);
-				} else if (control.startsWith('将')) {
-					if (player.countCards('h') > player.maxHp) await player.chooseToDiscard(true);
-					else if (player.countCards('h') < player.maxHp) {
-						await player.draw();
-						num1 = 1;
-					}
-				}
-
-				let num2 = 0;
-				player.getHistory("lose", function (evt) {
-					if (evt.type != "discard") return false;
-					let evt2 = evt.getParent("phaseDiscard");
-					if (evt2 && evt2.player == player) num2 += evt.cards2.length;
-				});
-				if (num1 < num2) {
-					lib.skill.ymfanxing.list.remove(control)
-					game.log(lib.skill.ymfanxing.list)
-					player.draw(2)
-				}
-			},
-		},
-
-		ym_xiaohuanxiong: ['小浣熊君', ['male', 'hyyz_other', 3, ['ymhuanzuo', 'ymzhuhe'], []], '樾舟'],
+		ym_xiaohuanxiong: ['小浣熊君', ['male', 'hyyz_ɸ', 3, ['ymhuanzuo', 'ymzhuhe'], []], '樾舟'],
 		ymhuanzuo_info: '欢作|锁定技，有角色摸牌阶段外一次获得或失去两张及以上的牌后，你摸一张牌。',
 		ymhuanzuo: {
 			audio: 2,
